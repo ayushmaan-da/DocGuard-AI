@@ -1,0 +1,30 @@
+{
+  "name": "docguard-ai",
+  "version": "1.0.0",
+  "description": "**Automated Documentation Drift Detection**",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayushmaan-da/DocGuard-AI.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/ayushmaan-da/DocGuard-AI/issues"
+  },
+  "homepage": "https://github.com/ayushmaan-da/DocGuard-AI#readme",
+  "dependencies": {
+    "busboy": "1.6.0",
+    "pdfjs-dist": "4.4.168"
+  }
+}
