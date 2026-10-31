@@ -1,157 +1,117 @@
 import { useState } from "react";
-
-import {
-  GitBranch,
-  Bell,
-  ShieldCheck,
-  Save
-} from "lucide-react";
+import { Save } from "lucide-react";
 
 import "./Settings.css";
 
-const Settings = () => {
-  const [notifications, setNotifications] = useState(true);
-  const [criticalAlerts, setCriticalAlerts] = useState(true);
-  const [defaultDocumentation, setDefaultDocumentation] =
-    useState("README.md");
+const STORAGE_KEY = "docguard-settings";
+const defaults = {
+  notifications: true,
+  criticalAlerts: true,
+  defaultDocumentation: "README.md"
+};
 
+const loadPreferences = () => {
+  try {
+    return { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) };
+  } catch {
+    return defaults;
+  }
+};
+
+const Settings = () => {
+  const [prefs, setPrefs] = useState(loadPreferences);
   const [saved, setSaved] = useState(false);
 
+  const update = (key, value) => setPrefs((p) => ({ ...p, [key]: value }));
+
   const handleSave = () => {
-    const preferences = {
-      notifications,
-      criticalAlerts,
-      defaultDocumentation
-    };
-
-    localStorage.setItem(
-      "docguard-settings",
-      JSON.stringify(preferences)
-    );
-
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    } catch {
+      /* storage unavailable; keep going */
+    }
     setSaved(true);
-
     setTimeout(() => setSaved(false), 2500);
   };
 
   return (
-    <div className="settings-page">
-
-      <div className="settings-heading">
-        <p className="eyebrow">PREFERENCES</p>
-        <h1>Settings</h1>
-        <p>Manage your DocGuard preferences.</p>
-      </div>
-
-      <section className="settings-card">
-
-        <div className="settings-card-heading">
-          <GitBranch size={21} />
-          <div>
-            <h2>GitHub Integration</h2>
-            <p>Manage your GitHub connection.</p>
-          </div>
+    <div className="page settings-page">
+      <header className="page-head">
+        <div>
+          <h1>Settings</h1>
+          <p>Choose how DocGuard connects, notifies and checks.</p>
         </div>
+      </header>
 
+      <section className="settings-section">
+        <h2>GitHub</h2>
         <div className="settings-row">
           <div>
-            <strong>GitHub Connection</strong>
-            <p>Connect your GitHub account to analyze repositories.</p>
+            <strong>GitHub account</strong>
+            <p>Connect your account so DocGuard can read pull requests.</p>
           </div>
-
-          <span className="connection-pending">
-            Not Connected
-          </span>
+          <span className="status pending">Not connected</span>
         </div>
-
-        <p className="settings-note">
-          GitHub authentication will be enabled after backend integration.
-        </p>
-
+        <p className="settings-note">Connecting will be available once the backend is live.</p>
       </section>
 
-      <section className="settings-card">
+      <section className="settings-section">
+        <h2>Notifications</h2>
 
-        <div className="settings-card-heading">
-          <Bell size={21} />
-
+        <label className="settings-row">
           <div>
-            <h2>Notifications</h2>
-            <p>Choose which notifications you receive.</p>
+            <strong>Notify me about results</strong>
+            <p>Get a notification when a check finishes.</p>
           </div>
-        </div>
-
-        <div className="settings-row">
-          <div>
-            <strong>Enable Notifications</strong>
-            <p>Receive notifications about analysis results.</p>
-          </div>
-
           <input
             type="checkbox"
-            checked={notifications}
-            onChange={(e) => setNotifications(e.target.checked)}
+            className="switch"
+            checked={prefs.notifications}
+            onChange={(e) => update("notifications", e.target.checked)}
           />
-        </div>
+        </label>
 
-        <div className="settings-row">
+        <label className="settings-row">
           <div>
-            <strong>Critical Issue Alerts</strong>
-            <p>Get notified when critical documentation drift is found.</p>
+            <strong>Alert me to critical issues</strong>
+            <p>Send an alert as soon as a critical mismatch is found.</p>
           </div>
-
           <input
             type="checkbox"
-            checked={criticalAlerts}
-            onChange={(e) => setCriticalAlerts(e.target.checked)}
+            className="switch"
+            checked={prefs.criticalAlerts}
+            disabled={!prefs.notifications}
+            onChange={(e) => update("criticalAlerts", e.target.checked)}
           />
-        </div>
-
+        </label>
       </section>
 
-      <section className="settings-card">
-
-        <div className="settings-card-heading">
-          <ShieldCheck size={21} />
-
+      <section className="settings-section">
+        <h2>Checks</h2>
+        <label className="settings-row">
           <div>
-            <h2>Analysis Preferences</h2>
-            <p>Configure default documentation settings.</p>
+            <strong>Default documentation source</strong>
+            <p>What DocGuard compares code against when you don’t upload a file.</p>
           </div>
-        </div>
-
-        <div className="settings-row">
-          <div>
-            <strong>Default Documentation Source</strong>
-            <p>Choose the default documentation source.</p>
-          </div>
-
           <select
-            value={defaultDocumentation}
-            onChange={(e) => setDefaultDocumentation(e.target.value)}
+            value={prefs.defaultDocumentation}
+            onChange={(e) => update("defaultDocumentation", e.target.value)}
           >
             <option value="README.md">README.md</option>
-            <option value="Custom Upload">Custom Upload</option>
+            <option value="Custom Upload">Custom upload</option>
           </select>
-        </div>
-
+        </label>
       </section>
 
-      <div className="settings-save-area">
-
-        {saved && (
-          <span className="settings-saved">
-            Settings saved successfully!
-          </span>
-        )}
-
-        <button onClick={handleSave}>
-          <Save size={17} />
-          Save Preferences
+      <div className="settings-save">
+        <span className="settings-saved" role="status">
+          {saved ? "Preferences saved" : ""}
+        </span>
+        <button className="btn" onClick={handleSave}>
+          <Save size={16} />
+          Save preferences
         </button>
-
       </div>
-
     </div>
   );
 };

@@ -8,58 +8,43 @@ import {
   ShieldCheck
 } from "lucide-react";
 
-const Sidebar = () => {
-  const navItems = [
-    { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "Repositories", path: "/repositories", icon: GitBranch },
-    { name: "Pull Requests", path: "/pull-requests", icon: GitPullRequest },
-    { name: "Issues", path: "/issues", icon: AlertCircle },
-    { name: "Settings", path: "/settings", icon: Settings }
-  ];
+const navItems = [
+  { name: "Dashboard", path: "/", icon: LayoutDashboard },
+  { name: "Repositories", path: "/repositories", icon: GitBranch },
+  { name: "Check a pull request", path: "/pull-requests", icon: GitPullRequest },
+  { name: "Issues", path: "/issues", icon: AlertCircle },
+  { name: "Settings", path: "/settings", icon: Settings }
+];
 
-  return (
-    <aside className="sidebar">
-
-      <div className="brand">
-        <div className="brand-icon">
-          <ShieldCheck size={24} />
-        </div>
-
-        <div>
-          <h2>DocGuard</h2>
-          <p>Documentation Intelligence</p>
-        </div>
+const Sidebar = () => (
+  <aside className="sidebar">
+    <div className="brand">
+      <div className="brand-icon">
+        <ShieldCheck size={17} color="#12161c" />
       </div>
+      <h2>DocGuard</h2>
+    </div>
 
-      <div className="sidebar-section">
-        <p className="section-heading">WORKSPACE</p>
+    <nav aria-label="Main">
+      {navItems.map(({ name, path, icon: Icon }) => (
+        <NavLink
+          key={name}
+          to={path}
+          end={path === "/"}
+          title={name}
+          className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+        >
+          <Icon size={18} />
+          <span>{name}</span>
+        </NavLink>
+      ))}
+    </nav>
 
-        {navItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              <Icon size={19} />
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
-      </div>
-
-      <div className="sidebar-bottom">
-        <span className="online-dot"></span>
-        All systems operational
-      </div>
-
-    </aside>
-  );
-};
+    <div className="sidebar-bottom">
+      <span className="online-dot" />
+      <span>Checks running normally</span>
+    </div>
+  </aside>
+);
 
 export default Sidebar;

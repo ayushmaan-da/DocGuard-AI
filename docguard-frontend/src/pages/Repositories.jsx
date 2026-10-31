@@ -1,12 +1,5 @@
 import { useState } from "react";
-
-import {
-  GitBranch,
-  AlertTriangle,
-  Search,
-  ExternalLink,
-  Plus
-} from "lucide-react";
+import { Search, ExternalLink, Plus } from "lucide-react";
 
 import { mockRepositories } from "../data/mockData";
 
@@ -15,102 +8,86 @@ import "./Repositories.css";
 const Repositories = () => {
   const [search, setSearch] = useState("");
 
-  const filteredRepositories = mockRepositories.filter((repo) =>
+  const repos = mockRepositories.filter((repo) =>
     repo.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="repositories-page">
-
-      <div className="repository-heading">
+    <div className="page">
+      <header className="page-head">
         <div>
-          <p className="eyebrow">WORKSPACE</p>
           <h1>Repositories</h1>
-          <p>Manage your connected GitHub repositories.</p>
+          <p>The GitHub repositories DocGuard watches for documentation drift.</p>
         </div>
-
-        <button className="repository-add-button">
-          <Plus size={17} />
-          Connect Repository
+        <button className="btn">
+          <Plus size={16} />
+          Connect repository
         </button>
-      </div>
+      </header>
 
-      <div className="repository-search">
-        <Search size={18} />
+      <label className="input repo-search">
+        <Search size={16} />
         <input
-          placeholder="Search repositories..."
+          placeholder="Search repositories"
+          aria-label="Search repositories"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-      </div>
+      </label>
 
-      <div className="repository-grid">
-
-        {filteredRepositories.map((repo) => (
-
-          <div className="repository-card" key={repo.id}>
-
-            <div className="repository-card-top">
-              <GitBranch size={24} />
-
-              <span className="connected-status">
-                {repo.status}
-              </span>
-            </div>
-
-            <h3>{repo.name}</h3>
-            <p className="repository-owner">{repo.owner}</p>
-
-            <div className="repository-metrics">
-
-              <div>
-                <GitBranch size={16} />
-                <span>{repo.analyzedPRs} PRs</span>
-              </div>
-
-              <div>
-                <AlertTriangle size={16} />
-                <span>{repo.issues} Issues</span>
-              </div>
-
-            </div>
-
-            <div className="repository-health">
-              <div>
-                <span>Documentation health</span>
-                <strong>{repo.health}%</strong>
-              </div>
-
-              <div className="repository-health-bar">
-                <div style={{ width: `${repo.health}%` }}></div>
-              </div>
-            </div>
-
-            <div className="repository-card-footer">
-              <span>{repo.lastAnalyzed}</span>
-
-              <a
-                href={repo.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Open ${repo.name} on GitHub`}
-              >
-                <ExternalLink size={16} />
-              </a>
-            </div>
-
-          </div>
-
-        ))}
-
-        {filteredRepositories.length === 0 && (
-          <p className="repository-empty">
-            No repositories found.
-          </p>
-        )}
-
-      </div>
-
+      {repos.length === 0 ? (
+        <div className="empty">
+          <strong>No repositories match “{search}”</strong>
+          Try a different name, or connect a new repository.
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Repository</th>
+                <th>Pull requests</th>
+                <th>Open issues</th>
+                <th>Docs in sync</th>
+                <th>Last checked</th>
+                <th><span className="sr-only">GitHub</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {repos.map((repo) => (
+                <tr key={repo.id}>
+                  <td>
+                    <strong>{repo.name}</strong>
+                    <div className="muted">{repo.owner}</div>
+                  </td>
+                  <td>{repo.analyzedPRs}</td>
+                  <td>{repo.issues}</td>
+                  <td>
+                    <div className="repo-health">
+                      <div className="bar" role="img" aria-label={`${repo.health}% in sync`}>
+                        <div style={{ width: `${repo.health}%` }} />
+                      </div>
+                      <span>{repo.health}%</span>
+                    </div>
+                  </td>
+                  <td className="muted">{repo.lastAnalyzed}</td>
+                  <td>
+                    <a
+                      className="icon-link"
+                      href={repo.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open ${repo.name} on GitHub`}
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

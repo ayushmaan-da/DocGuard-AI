@@ -1,11 +1,7 @@
 import { useState } from "react";
+import { Search } from "lucide-react";
 
-import {
-  AlertTriangle,
-  Search,
-  FileText
-} from "lucide-react";
-
+import SeverityTag from "../components/SeverityTag";
 import { mockIssues } from "../data/mockData";
 
 import "./DocumentationIssues.css";
@@ -15,133 +11,86 @@ const DocumentationIssues = () => {
   const [severity, setSeverity] = useState("All");
   const [status, setStatus] = useState("All");
 
-  const filteredIssues = mockIssues.filter((issue) => {
-
-    const matchesSearch =
-      issue.file.toLowerCase().includes(search.toLowerCase()) ||
-      issue.repository.toLowerCase().includes(search.toLowerCase()) ||
-      issue.description.toLowerCase().includes(search.toLowerCase());
-
-    const matchesSeverity =
-      severity === "All" || issue.severity === severity;
-
-    const matchesStatus =
-      status === "All" || issue.status === status;
-
-    return matchesSearch && matchesSeverity && matchesStatus;
-
-  });
+  const q = search.toLowerCase();
+  const issues = mockIssues.filter(
+    (issue) =>
+      (issue.file.toLowerCase().includes(q) ||
+        issue.repository.toLowerCase().includes(q) ||
+        issue.description.toLowerCase().includes(q)) &&
+      (severity === "All" || issue.severity === severity) &&
+      (status === "All" || issue.status === status)
+  );
 
   return (
-    <div className="documentation-issues-page">
-
-      <div className="issues-heading">
+    <div className="page">
+      <header className="page-head">
         <div>
-          <p className="eyebrow">ISSUE MANAGEMENT</p>
-          <h1>Documentation Issues</h1>
-          <p>Review and manage detected documentation drift.</p>
+          <h1>Documentation issues</h1>
+          <p>Every place DocGuard found docs that no longer match the code.</p>
         </div>
-      </div>
+      </header>
 
       <div className="issues-toolbar">
-
-        <div className="issue-search">
-          <Search size={18} />
-
+        <label className="input">
+          <Search size={16} />
           <input
-            placeholder="Search issues..."
+            placeholder="Search by file, repository or description"
+            aria-label="Search issues"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </label>
+
+        <select value={severity} onChange={(e) => setSeverity(e.target.value)} aria-label="Severity">
+          <option value="All">All severities</option>
+          <option>Critical</option>
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+
+        <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
+          <option value="All">All statuses</option>
+          <option>Open</option>
+          <option>Resolved</option>
+        </select>
+      </div>
+
+      <p className="muted issues-count" role="status">
+        {issues.length} {issues.length === 1 ? "issue" : "issues"}
+      </p>
+
+      {issues.length === 0 ? (
+        <div className="empty">
+          <strong>No issues match these filters</strong>
+          Clear the search or choose “All” to see everything.
         </div>
-
-        <select
-          value={severity}
-          onChange={(e) => setSeverity(e.target.value)}
-        >
-          <option value="All">All Severities</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
-        </select>
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="All">All Statuses</option>
-          <option value="Open">Open</option>
-          <option value="Resolved">Resolved</option>
-        </select>
-
-      </div>
-
-      <div className="issues-count">
-        <AlertTriangle size={18} />
-        {filteredIssues.length} issues found
-      </div>
-
-      <div className="issues-table-wrapper">
-
-        <table className="issues-table">
-
-          <thead>
-            <tr>
-              <th>Repository</th>
-              <th>Documentation</th>
-              <th>Issue</th>
-              <th>Severity</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {filteredIssues.map((issue) => (
-
-              <tr key={issue.id}>
-
-                <td>{issue.repository}</td>
-
-                <td>
-                  <div className="issue-document">
-                    <FileText size={16} />
-                    {issue.file}
-                    <span>:{issue.line}</span>
-                  </div>
-                </td>
-
-                <td>{issue.description}</td>
-
-                <td>
-                  <span className={`severity ${issue.severity.toLowerCase()}`}>
-                    {issue.severity}
-                  </span>
-                </td>
-
-                <td>
-                  <span className={`issue-status ${issue.status.toLowerCase()}`}>
-                    {issue.status}
-                  </span>
-                </td>
-
+      ) : (
+        <div className="table-wrap">
+          <table className="table issues-table">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Repository</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Status</th>
               </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-        {filteredIssues.length === 0 && (
-          <p className="no-issues">
-            No matching documentation issues found.
-          </p>
-        )}
-
-      </div>
-
+            </thead>
+            <tbody>
+              {issues.map((issue) => (
+                <tr key={issue.id}>
+                  <td className="path">{issue.file}:{issue.line}</td>
+                  <td>{issue.repository}</td>
+                  <td>{issue.description}</td>
+                  <td><SeverityTag severity={issue.severity} /></td>
+                  <td><span className={`status ${issue.status.toLowerCase()}`}>{issue.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

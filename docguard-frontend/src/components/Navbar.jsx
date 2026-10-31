@@ -1,45 +1,42 @@
 import { Search, Bell } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
-const Navbar = () => {
-  const location = useLocation();
+const pageNames = {
+  "/": "Dashboard",
+  "/repositories": "Repositories",
+  "/pull-requests": "Check a pull request",
+  "/analysis-results": "Results",
+  "/issues": "Documentation issues",
+  "/settings": "Settings"
+};
 
-  const pageNames = {
-    "/": "Dashboard",
-    "/repositories": "Repositories",
-    "/pull-requests": "Pull Requests",
-    "/issues": "Documentation Issues",
-    "/settings": "Settings"
-  };
+const Navbar = () => {
+  const { pathname } = useLocation();
 
   return (
     <header className="navbar">
-
       <div className="breadcrumb">
         <span>Workspace</span>
-        <span>/</span>
-        <strong>{pageNames[location.pathname] || "Dashboard"}</strong>
+        <span aria-hidden="true">/</span>
+        <strong>{pageNames[pathname] || "Dashboard"}</strong>
       </div>
 
       <div className="navbar-right">
+        <label className="search-box">
+          <Search size={16} />
+          <input placeholder="Search" aria-label="Search" />
+        </label>
 
-        <div className="search-box">
-          <Search size={17} />
-          <input placeholder="Search anything..." />
-        </div>
-
-        <button className="notification-button">
-          <Bell size={20} />
-          <span className="notification-indicator"></span>
+        <button className="notification-button" aria-label="Notifications">
+          <Bell size={18} />
+          <span className="notification-indicator" />
         </button>
 
         <div className="user-profile">
           <div className="avatar">A</div>
           <span>Admin</span>
         </div>
-
       </div>
-
     </header>
   );
 };

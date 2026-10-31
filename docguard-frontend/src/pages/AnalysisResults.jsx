@@ -1,199 +1,103 @@
 import { useState } from "react";
+import { CheckCircle } from "lucide-react";
 
-import {
-  AlertTriangle,
-  FileText,
-  GitPullRequest,
-  CheckCircle,
-  Code,
-  ExternalLink
-} from "lucide-react";
-
+import DriftDiff from "../components/DriftDiff";
+import SeverityTag from "../components/SeverityTag";
 import { mockAnalysis } from "../data/mockData";
 
 import "./AnalysisResults.css";
 
+const filters = ["All", "Critical", "High", "Medium", "Low"];
+
 const AnalysisResults = () => {
-  const [selectedIssue, setSelectedIssue] = useState(
-    mockAnalysis.issues[0]
-  );
-
   const [filter, setFilter] = useState("All");
+  const [selectedId, setSelectedId] = useState(mockAnalysis.issues[0]?.id);
 
-  const filteredIssues = mockAnalysis.issues.filter((issue) => {
-    return filter === "All" || issue.severity === filter;
-  });
+  const visible = mockAnalysis.issues.filter(
+    (issue) => filter === "All" || issue.severity === filter
+  );
+  const selected = visible.find((i) => i.id === selectedId) ?? visible[0];
 
-  const severityClass = (severity) => {
-    return severity.toLowerCase();
-  };
+  const countFor = (f) =>
+    f === "All"
+      ? mockAnalysis.issues.length
+      : mockAnalysis.issues.filter((i) => i.severity === f).length;
 
   return (
-    <div className="results-page">
-
-      <div className="results-heading">
+    <div className="page">
+      <header className="page-head">
         <div>
-          <p className="eyebrow">ANALYSIS REPORT</p>
-          <h1>Analysis Results</h1>
-          <p>Documentation drift detected in your pull request.</p>
+          <h1>
+            {mockAnalysis.repository} {mockAnalysis.pullRequest}
+          </h1>
+          <p>
+            <code>{mockAnalysis.branch}</code> into <code>{mockAnalysis.baseBranch}</code>
+          </p>
         </div>
+        <span className="status clean"><CheckCircle size={15} /> Check complete</span>
+      </header>
 
-        <span className="completed-badge">
-          <CheckCircle size={15} />
-          Analysis Completed
-        </span>
-      </div>
+      <dl className="summary">
+        <div><dt>Files changed</dt><dd>{mockAnalysis.filesChanged}</dd></div>
+        <div><dt>Documentation files</dt><dd>{mockAnalysis.documentationFiles}</dd></div>
+        <div><dt>Places docs disagree</dt><dd>{mockAnalysis.totalIssues}</dd></div>
+      </dl>
 
-      <div className="analysis-repo-card">
-        <div>
-          <GitPullRequest size={22} />
-
-          <div>
-            <h3>{mockAnalysis.repository}</h3>
-            <p>Pull Request {mockAnalysis.pullRequest}</p>
-          </div>
-        </div>
-
-        <div className="branch-info">
-          {mockAnalysis.branch} → {mockAnalysis.baseBranch}
-        </div>
-      </div>
-
-      <div className="result-stats">
-
-        <div className="result-stat">
-          <FileText size={21} />
-          <span>Files Changed</span>
-          <h2>{mockAnalysis.filesChanged}</h2>
-        </div>
-
-        <div className="result-stat">
-          <GitPullRequest size={21} />
-          <span>Documentation Files</span>
-          <h2>{mockAnalysis.documentationFiles}</h2>
-        </div>
-
-        <div className="result-stat">
-          <AlertTriangle size={21} />
-          <span>Drift Detected</span>
-          <h2>{mockAnalysis.totalIssues}</h2>
-        </div>
-
-      </div>
-
-      <section className="results-panel">
-
-        <div className="results-panel-heading">
-          <div>
-            <h2>Detected Issues</h2>
-            <p>Potential documentation inconsistencies.</p>
-          </div>
-
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+      <div className="results-toolbar" role="tablist" aria-label="Filter by severity">
+        {filters.map((f) => (
+          <button
+            key={f}
+            role="tab"
+            aria-selected={filter === f}
+            className={`chip ${filter === f ? "on" : ""}`}
+            onClick={() => setFilter(f)}
           >
-            <option>All</option>
-            <option>Critical</option>
-            <option>High</option>
-            <option>Medium</option>
-            <option>Low</option>
-          </select>
-        </div>
+            {f} <span>{countFor(f)}</span>
+          </button>
+        ))}
+      </div>
 
+      {visible.length === 0 ? (
+        <div className="empty">
+          <strong>No {filter.toLowerCase()} issues in this pull request</strong>
+          Choose another severity to see the rest.
+        </div>
+      ) : (
         <div className="results-content">
-
-          <div className="results-issue-list">
-
-            {filteredIssues.length === 0 ? (
-              <p className="empty-results">
-                No issues found for this severity.
-              </p>
-            ) : (
-
-              filteredIssues.map((issue) => (
-
+          <ul className="results-list">
+            {visible.map((issue) => (
+              <li key={issue.id}>
                 <button
-                  key={issue.id}
-                  className={`result-issue ${
-                    selectedIssue?.id === issue.id ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedIssue(issue)}
+                  className={`result-issue ${selected?.id === issue.id ? "selected" : ""}`}
+                  aria-pressed={selected?.id === issue.id}
+                  onClick={() => setSelectedId(issue.id)}
                 >
-
-                  <div>
-                    <strong>{issue.file}</strong>
-                    <span>Line {issue.line}</span>
-                  </div>
-
-                  <p>{issue.description}</p>
-
-                  <span className={`severity ${severityClass(issue.severity)}`}>
-                    {issue.severity}
-                  </span>
-
+                  <span className="path">{issue.file}:{issue.line}</span>
+                  <span className="result-desc">{issue.description}</span>
+                  <SeverityTag severity={issue.severity} />
                 </button>
+              </li>
+            ))}
+          </ul>
 
-              ))
-
-            )}
-
-          </div>
-
-          {selectedIssue && (
-
-            <div className="issue-detail">
-
-              <div className="issue-detail-heading">
-                <div>
-                  <p>ISSUE DETAILS</p>
-                  <h3>{selectedIssue.type}</h3>
-                </div>
-
-                <span className={`severity ${severityClass(selectedIssue.severity)}`}>
-                  {selectedIssue.severity}
-                </span>
+          {selected && (
+            <article className="issue-detail" aria-live="polite">
+              <div className="issue-detail-head">
+                <h2>{selected.type}</h2>
+                <SeverityTag severity={selected.severity} />
               </div>
-
-              <div className="detail-meta">
-                <span>Repository: {selectedIssue.repository}</span>
-                <span>File: {selectedIssue.file}</span>
-                <span>Line: {selectedIssue.line}</span>
-              </div>
-
-              <h4>Outdated Documentation</h4>
-
-              <div className="code-block outdated">
-                <span>DOCUMENTATION</span>
-                <code>{selectedIssue.documented}</code>
-              </div>
-
-              <h4>Current Implementation</h4>
-
-              <div className="code-block actual">
-                <span>SOURCE CODE</span>
-                <code>{selectedIssue.actual}</code>
-              </div>
-
-              <div className="issue-explanation">
-                <AlertTriangle size={18} />
-                <p>{selectedIssue.description}</p>
-              </div>
-
-              <button className="source-button">
-                <Code size={16} />
-                Source reference
-                <ExternalLink size={14} />
-              </button>
-
-            </div>
-
+              <p className="muted">{selected.description}</p>
+              <DriftDiff
+                file={selected.file}
+                line={selected.line}
+                documented={selected.documented}
+                actual={selected.actual}
+              />
+              <p className="muted">Repository: {selected.repository}</p>
+            </article>
           )}
-
         </div>
-
-      </section>
-
+      )}
     </div>
   );
 };
