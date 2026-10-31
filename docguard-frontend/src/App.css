@@ -1,0 +1,46 @@
+/* Shared patterns used by more than one page.
+   Page-specific styles live next to each page; tokens live in index.css. */
+
+/* Visually hidden, still read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Key figures in a ruled row (Dashboard, Analysis results) */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+.summary > div { padding: 24px 0; }
+.summary > div + div { padding-left: 24px; border-left: 1px solid var(--line); }
+.summary dt { color: var(--muted); }
+.summary dd {
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Thin progress bar (Dashboard, Repositories) */
+.bar {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar > div { height: 100%; background: var(--ink); }
+
+@media (max-width: 560px) {
+  .summary { grid-template-columns: 1fr; }
+  .summary > div + div {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+}

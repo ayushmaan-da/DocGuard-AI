@@ -1,0 +1,6 @@
+.issues-toolbar { display: flex; gap: 12px; }
+.issues-toolbar .input { flex: 1; }
+.issues-toolbar select { height: 42px; }
+.issues-count { margin: 16px 0 8px; }
+.issues-table { min-width: 720px; }
+@media (max-width: 700px) { .issues-toolbar { flex-direction: column; } }
