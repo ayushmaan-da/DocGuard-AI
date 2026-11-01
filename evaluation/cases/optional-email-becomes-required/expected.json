@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "The email field is optional when creating a user.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (!req.body.email) return res.status(400).json({ error: \"email required\" });"
+    }
+  ]
+}

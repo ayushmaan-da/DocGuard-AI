@@ -1,0 +1,25 @@
+{
+  "id": "status-refactor-no-drift",
+  "category": "behavior-preserving change",
+  "description": "Return and explicit 200 preserve the documented response.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users with status 200.",
+      "reason": "The documentation claims the status is 200, but the updated code adds an explicit status of 200, which contradicts the original behavior of not specifying the status.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.json(users);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users with status 200.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the status is 200, but the updated code adds an explicit status of 200, which contradicts the original behavior of not specifying the status.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

@@ -1,0 +1,25 @@
+{
+  "id": "validation-refactor-equivalent",
+  "category": "semantic equivalence",
+  "description": "Validation is rewritten with equivalent array logic.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "POST /users rejects empty `name` or `email` values.",
+      "reason": "The updated code uses `.some()` to check if any of the values in the array are empty, which means it will reject requests with either `name` or `email` empty, not just both.",
+      "evidenceType": "removed",
+      "codeEvidence": "if (req.body.name.trim() === \"\" || req.body.email.trim() === \"\") return res.status(400).end();"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users rejects empty `name` or `email` values.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code uses `.some()` to check if any of the values in the array are empty, which means it will reject requests with either `name` or `email` empty, not just both.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

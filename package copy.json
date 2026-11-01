@@ -1,0 +1,20 @@
+{
+  "name": "qwen-crud-drift-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CRUD API fixture for testing Qwen-powered documentation drift detection",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "check-docs": "node test.js",
+    "test:api": "node smoke-test.js",
+    "test": "npm run test:api && npm run test:engine",
+    "test:engine": "node --test detector-fallback.test.js drift-engine.test.js evaluation/evaluate.test.js",
+    "evaluate": "node evaluation/evaluate.js",
+    "evaluate:prepare": "node evaluation/evaluate.js --prepare-only",
+    "evaluate:report": "node evaluation/evaluate.js --summarize-existing"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

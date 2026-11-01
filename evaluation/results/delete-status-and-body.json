@@ -1,0 +1,32 @@
+{
+  "id": "delete-status-and-body",
+  "category": "status and body",
+  "description": "DELETE stops returning the documented empty 204 response.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "DELETE /users/:id returns status 204 with an empty body.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.status(200).json({ deleted: true });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "DELETE /users/:id returns status 204 with an empty body.",
+      "reason": "The documentation claims the response status is 204, but the updated code returns 200 with a JSON body.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.status(204).end();"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"DELETE /users/:id returns status 204 with an empty body.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the response status is 204, but the updated code returns 200 with a JSON body.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

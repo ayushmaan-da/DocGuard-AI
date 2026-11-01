@@ -1,0 +1,25 @@
+{
+  "id": "undocumented-normalization",
+  "category": "undocumented behavior change",
+  "description": "Email normalization changes internally but no README claim describes casing.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "POST /users accepts an email address and returns the created user.",
+      "reason": "The documentation claims the API accepts an email address, but the updated code converts the email to lowercase, which changes the behavior of how the email is processed.",
+      "evidenceType": "added",
+      "codeEvidence": "const user = { email: req.body.email.toLowerCase() };"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users accepts an email address and returns the created user.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The documentation claims the API accepts an email address, but the updated code converts the email to lowercase, which changes the behavior of how the email is processed.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

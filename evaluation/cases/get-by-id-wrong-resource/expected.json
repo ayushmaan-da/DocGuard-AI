@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns the user whose ID matches the route parameter.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json(users[0]);"
+    }
+  ]
+}

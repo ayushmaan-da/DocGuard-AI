@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "DELETE /users/:id returns status 204 with an empty body.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.status(200).json({ deleted: true });"
+    }
+  ]
+}

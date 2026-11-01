@@ -1,0 +1,32 @@
+{
+  "id": "post-status-code",
+  "category": "status-code drift",
+  "description": "POST changes from documented 201 to 200.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "POST /users responds with HTTP status 201.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.status(200).json(req.body);"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "POST /users responds with HTTP status 201.",
+      "reason": "The documentation claims the response status is 201, but the updated code changes it to 200.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.status(201).json(req.body);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users responds with HTTP status 201.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the response status is 201, but the updated code changes it to 200.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

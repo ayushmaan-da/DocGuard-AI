@@ -1,0 +1,653 @@
+{
+  "model": "qwen2.5-coder:7b",
+  "scenarioCount": 21,
+  "exactPasses": 4,
+  "metrics": {
+    "tp": 4,
+    "fp": 17,
+    "fn": 11,
+    "claimTp": 15,
+    "claimFp": 6,
+    "claimFn": 0,
+    "precision": 0.19047619047619047,
+    "recall": 0.26666666666666666,
+    "f1": 0.2222222222222222,
+    "claimPrecision": 0.7142857142857143,
+    "claimRecall": 1,
+    "claimF1": 0.8333333333333333,
+    "rawFindingCount": 21,
+    "validFindingCount": 21
+  },
+  "results": [
+    {
+      "id": "post-status-code",
+      "category": "status-code drift",
+      "description": "POST changes from documented 201 to 200.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "POST /users responds with HTTP status 201.",
+          "evidenceType": "added",
+          "codeEvidence": "  res.status(200).json(req.body);"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "POST /users responds with HTTP status 201.",
+          "reason": "The documentation claims the response status is 201, but the updated code changes it to 200.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.status(201).json(req.body);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users responds with HTTP status 201.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the response status is 201, but the updated code changes it to 200.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "collection-response-shape",
+      "category": "response shape",
+      "description": "Collection response changes from array to an object wrapper.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array of users.",
+          "evidenceType": "added",
+          "codeEvidence": "  res.json({ users });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array of users.",
+          "reason": "The documentation claims that GET /users returns a JSON array of users, but the updated code wraps the array in an object, changing the response shape.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.json(users);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that GET /users returns a JSON array of users, but the updated code wraps the array in an object, changing the response shape.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "delete-status-and-body",
+      "category": "status and body",
+      "description": "DELETE stops returning the documented empty 204 response.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "DELETE /users/:id returns status 204 with an empty body.",
+          "evidenceType": "added",
+          "codeEvidence": "  res.status(200).json({ deleted: true });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "DELETE /users/:id returns status 204 with an empty body.",
+          "reason": "The documentation claims the response status is 204, but the updated code returns 200 with a JSON body.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.status(204).end();"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"DELETE /users/:id returns status 204 with an empty body.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the response status is 204, but the updated code returns 200 with a JSON body.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "get-by-id-wrong-resource",
+      "category": "resource selection",
+      "description": "GET by ID stops returning the matching resource.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns the user whose ID matches the route parameter.",
+          "evidenceType": "added",
+          "codeEvidence": "  res.json(users[0]);"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns the user whose ID matches the route parameter.",
+          "reason": "The documentation claims that the endpoint returns the user whose ID matches the route parameter, but the updated code always returns the first user in the array, regardless of the route parameter.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.json(user);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns the user whose ID matches the route parameter.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that the endpoint returns the user whose ID matches the route parameter, but the updated code always returns the first user in the array, regardless of the route parameter.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "put-replacement-becomes-merge",
+      "category": "PUT semantics",
+      "description": "PUT begins preserving fields omitted from the request.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "PUT /users/:id replaces the resource and removes fields omitted from the request.",
+          "evidenceType": "added",
+          "codeEvidence": "users[index] = { ...users[index], ...req.body };"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "PUT /users/:id replaces the resource and removes fields omitted from the request.",
+          "reason": "The updated code uses object spread to merge the existing user with the request body, which may not remove omitted fields as the documentation suggests.",
+          "evidenceType": "removed",
+          "codeEvidence": "users[index] = { id: req.params.id, name: req.body.name, email: req.body.email };"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"PUT /users/:id replaces the resource and removes fields omitted from the request.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code uses object spread to merge the existing user with the request body, which may not remove omitted fields as the documentation suggests.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "patch-drops-omitted-fields",
+      "category": "PATCH semantics",
+      "description": "PATCH starts discarding fields the request omits.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "PATCH /users/:id changes only supplied fields and preserves omitted fields.",
+          "evidenceType": "added",
+          "codeEvidence": "users[index] = { id: req.params.id, ...req.body };"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "PATCH /users/:id changes only supplied fields and preserves omitted fields.",
+          "reason": "The updated code replaces the entire user object with a new object that includes the user's ID, which contradicts the documentation stating that only supplied fields should be changed and omitted fields preserved.",
+          "evidenceType": "added",
+          "codeEvidence": "users[index] = { id: req.params.id, ...req.body };"
+        }
+      ],
+      "pass": true,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"PATCH /users/:id changes only supplied fields and preserves omitted fields.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code replaces the entire user object with a new object that includes the user's ID, which contradicts the documentation stating that only supplied fields should be changed and omitted fields preserved.\"\n    }\n  ]\n}",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "optional-email-becomes-required",
+      "category": "validation drift",
+      "description": "POST adds a requirement that contradicts an optional-field claim.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "The email field is optional when creating a user.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (!req.body.email) return res.status(400).json({ error: \"email required\" });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "The email field is optional when creating a user.",
+          "reason": "The updated code now requires the email field, contradicting the documentation.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (!req.body.email) return res.status(400).json({ error: \"email required\" });"
+        }
+      ],
+      "pass": true,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"The email field is optional when creating a user.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code now requires the email field, contradicting the documentation.\"\n    }\n  ]\n}",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "duplicate-emails-now-rejected",
+      "category": "validation drift",
+      "description": "POST introduces duplicate-email rejection contrary to the README.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "The API allows multiple users to share an email address.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (users.some(user => user.email === req.body.email)) return res.status(409).json({ error: \"duplicate email\" });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "The API allows multiple users to share an email address.",
+          "reason": "The updated code checks for duplicate emails and returns a 409 error if a duplicate is found, contradicting the documentation that states multiple users can share an email address.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (users.some(user => user.email === req.body.email)) return res.status(409).json({ error: \"duplicate email\" });"
+        }
+      ],
+      "pass": true,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"The API allows multiple users to share an email address.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code checks for duplicate emails and returns a 409 error if a duplicate is found, contradicting the documentation that states multiple users can share an email address.\"\n    }\n  ]\n}",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "query-filter-removed",
+      "category": "query behavior",
+      "description": "GET /users stops applying its documented name filter.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users?name= filters the collection to users with that name.",
+          "evidenceType": "added",
+          "codeEvidence": "  res.json(users);"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users?name= filters the collection to users with that name.",
+          "reason": "The documentation claims that the endpoint filters users by name, but the updated code returns all users without filtering.",
+          "evidenceType": "removed",
+          "codeEvidence": "  const results = users.filter(user => user.name === req.query.name);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users?name= filters the collection to users with that name.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that the endpoint filters users by name, but the updated code returns all users without filtering.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "missing-user-status",
+      "category": "not-found behavior",
+      "description": "A missing user changes from 404 to 200.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns status 404 when the user does not exist.",
+          "evidenceType": "added",
+          "codeEvidence": "if (!user) return res.status(200).json(null);"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns status 404 when the user does not exist.",
+          "reason": "The updated code returns a 200 status instead of a 404 status when the user does not exist.",
+          "evidenceType": "removed",
+          "codeEvidence": "if (!user) return res.status(404).json({ error: \"User not found\" });"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns status 404 when the user does not exist.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code returns a 200 status instead of a 404 status when the user does not exist.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "authentication-added",
+      "category": "authentication",
+      "description": "A formerly public route starts requiring authentication.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "User routes are public and do not require authentication.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (!req.user) return res.status(401).json({ error: \"Unauthorized\" });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "User routes are public and do not require authentication.",
+          "reason": "The new implementation checks for authentication, which contradicts the claim that user routes do not require authentication.",
+          "evidenceType": "added",
+          "codeEvidence": "  if (!req.user) return res.status(401).json({ error: \"Unauthorized\" });"
+        }
+      ],
+      "pass": true,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"User routes are public and do not require authentication.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The new implementation checks for authentication, which contradicts the claim that user routes do not require authentication.\"\n    }\n  ]\n}",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "error-response-key-changed",
+      "category": "error response shape",
+      "description": "Error payload changes its documented property name.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "Error responses contain a JSON `error` property.",
+          "evidenceType": "added",
+          "codeEvidence": "return res.status(404).json({ message: \"User not found\" });"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "Error responses contain a JSON `error` property.",
+          "reason": "The documentation claims that error responses must contain a JSON `error` property. However, the updated code now returns a JSON `message` property instead, which contradicts this claim.",
+          "evidenceType": "removed",
+          "codeEvidence": "return res.status(404).json({ error: \"User not found\" });"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"Error responses contain a JSON `error` property.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that error responses must contain a JSON `error` property. However, the updated code now returns a JSON `message` property instead, which contradicts this claim.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "collection-now-truncated",
+      "category": "collection completeness",
+      "description": "GET /users silently truncates its documented full collection.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns every user in the collection.",
+          "evidenceType": "added",
+          "codeEvidence": "res.json(users.slice(0, 10));"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns every user in the collection.",
+          "reason": "The updated code now returns only the first 10 users, contradicting the documentation that claims it returns every user.",
+          "evidenceType": "removed",
+          "codeEvidence": "res.json(users);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns every user in the collection.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code now returns only the first 10 users, contradicting the documentation that claims it returns every user.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "unknown-route-status",
+      "category": "unknown route behavior",
+      "description": "Unknown routes stop returning 404.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "Unknown routes return status 404.",
+          "evidenceType": "added",
+          "codeEvidence": "app.use((req, res) => res.status(200).json({ error: \"Route not found\" }));"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "Unknown routes return status 404.",
+          "reason": "The updated code now returns a 200 status instead of a 404 status for unknown routes, which contradicts the documentation.",
+          "evidenceType": "removed",
+          "codeEvidence": "app.use((req, res) => res.status(404).json({ error: \"Route not found\" }));"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"Unknown routes return status 404.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code now returns a 200 status instead of a 404 status for unknown routes, which contradicts the documentation.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "route-removed",
+      "category": "route removal",
+      "description": "The documented resource route is removed.",
+      "expected": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns one user by ID.",
+          "evidenceType": "removed",
+          "codeEvidence": "app.get(\"/users/:id\", (req, res) => {"
+        }
+      ],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users/:id returns one user by ID.",
+          "reason": "The updated code now returns all users instead of a single user by ID.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.json(users.find(user => user.id === req.params.id));"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns one user by ID.\",\n      \"evidenceId\": \"E4\",\n      \"reason\": \"The updated code now returns all users instead of a single user by ID.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "claimTp": 1,
+      "claimFp": 0,
+      "claimFn": 0
+    },
+    {
+      "id": "status-refactor-no-drift",
+      "category": "behavior-preserving change",
+      "description": "Return and explicit 200 preserve the documented response.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array of users with status 200.",
+          "reason": "The documentation claims the status is 200, but the updated code adds an explicit status of 200, which contradicts the original behavior of not specifying the status.",
+          "evidenceType": "removed",
+          "codeEvidence": "  res.json(users);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users with status 200.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims the status is 200, but the updated code adds an explicit status of 200, which contradicts the original behavior of not specifying the status.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    },
+    {
+      "id": "preexisting-documentation-mismatch",
+      "category": "pre-existing inaccuracy",
+      "description": "The README was already wrong and the code change does not worsen it.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array of users.",
+          "reason": "The updated code adds a console log statement, which does not affect the observable behavior of the API. The documentation only promises a JSON response, and the addition of a console log does not contradict this claim.",
+          "evidenceType": "added",
+          "codeEvidence": "  console.log(\"collection requested\");"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code adds a console log statement, which does not affect the observable behavior of the API. The documentation only promises a JSON response, and the addition of a console log does not contradict this claim.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    },
+    {
+      "id": "undocumented-normalization",
+      "category": "undocumented behavior change",
+      "description": "Email normalization changes internally but no README claim describes casing.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "POST /users accepts an email address and returns the created user.",
+          "reason": "The documentation claims the API accepts an email address, but the updated code converts the email to lowercase, which changes the behavior of how the email is processed.",
+          "evidenceType": "added",
+          "codeEvidence": "const user = { email: req.body.email.toLowerCase() };"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users accepts an email address and returns the created user.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The documentation claims the API accepts an email address, but the updated code converts the email to lowercase, which changes the behavior of how the email is processed.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    },
+    {
+      "id": "validation-refactor-equivalent",
+      "category": "semantic equivalence",
+      "description": "Validation is rewritten with equivalent array logic.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "POST /users rejects empty `name` or `email` values.",
+          "reason": "The updated code uses `.some()` to check if any of the values in the array are empty, which means it will reject requests with either `name` or `email` empty, not just both.",
+          "evidenceType": "removed",
+          "codeEvidence": "if (req.body.name.trim() === \"\" || req.body.email.trim() === \"\") return res.status(400).end();"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"POST /users rejects empty `name` or `email` values.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code uses `.some()` to check if any of the values in the array are empty, which means it will reject requests with either `name` or `email` empty, not just both.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    },
+    {
+      "id": "array-copy-equivalent",
+      "category": "semantic equivalence",
+      "description": "Returning a shallow copy preserves the documented array response.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array containing all users.",
+          "reason": "The documentation claims that the response is a JSON array containing all users. However, the updated code wraps the array in another array, changing the structure to [...users], which contradicts the documentation.",
+          "evidenceType": "added",
+          "codeEvidence": "res.json([...users]);"
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array containing all users.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The documentation claims that the response is a JSON array containing all users. However, the updated code wraps the array in another array, changing the structure to [...users], which contradicts the documentation.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    },
+    {
+      "id": "comment-only-change",
+      "category": "non-behavioral change",
+      "description": "A comment changes without changing endpoint behavior.",
+      "expected": [],
+      "actual": [
+        {
+          "outdated": true,
+          "sentence": "GET /users returns a JSON array of users.",
+          "reason": "The documentation claims that GET /users returns a JSON array of users, but the old code used 'Return the full collection' and the new code uses 'Send all records', which are equivalent and do not contradict the documentation.",
+          "evidenceType": "removed",
+          "codeEvidence": "  // Return the full collection."
+        }
+      ],
+      "pass": false,
+      "validationError": null,
+      "error": null,
+      "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that GET /users returns a JSON array of users, but the old code used 'Return the full collection' and the new code uses 'Send all records', which are equivalent and do not contradict the documentation.\"\n    }\n  ]\n}",
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "claimTp": 0,
+      "claimFp": 1,
+      "claimFn": 0
+    }
+  ]
+}

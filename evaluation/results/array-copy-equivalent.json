@@ -1,0 +1,25 @@
+{
+  "id": "array-copy-equivalent",
+  "category": "semantic equivalence",
+  "description": "Returning a shallow copy preserves the documented array response.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array containing all users.",
+      "reason": "The documentation claims that the response is a JSON array containing all users. However, the updated code wraps the array in another array, changing the structure to [...users], which contradicts the documentation.",
+      "evidenceType": "added",
+      "codeEvidence": "res.json([...users]);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array containing all users.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The documentation claims that the response is a JSON array containing all users. However, the updated code wraps the array in another array, changing the structure to [...users], which contradicts the documentation.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

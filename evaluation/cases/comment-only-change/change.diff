@@ -1,0 +1,10 @@
+diff --git a/original.js b/updated.js
+index 197a685..4c73ae9 100644
+--- a/original.js
++++ b/updated.js
+@@ -1,4 +1,4 @@
+ app.get("/users", (req, res) => {
+-  // Return the full collection.
++  // Send all records.
+   res.json(users);
+ });

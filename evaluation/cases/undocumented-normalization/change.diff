@@ -1,0 +1,7 @@
+diff --git a/original.js b/updated.js
+index 5e2bbd7..a678982 100644
+--- a/original.js
++++ b/updated.js
+@@ -1 +1 @@
+-const user = { email: req.body.email };
++const user = { email: req.body.email.toLowerCase() };

@@ -1,0 +1,7 @@
+diff --git a/original.js b/updated.js
+index a47579d..f45a398 100644
+--- a/original.js
++++ b/updated.js
+@@ -1 +1 @@
+-if (req.body.name.trim() === "" || req.body.email.trim() === "") return res.status(400).end();
++if ([req.body.name, req.body.email].some(value => value.trim() === "")) return res.status(400).end();

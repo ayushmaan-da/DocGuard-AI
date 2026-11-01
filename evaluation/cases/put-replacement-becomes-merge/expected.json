@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "PUT /users/:id replaces the resource and removes fields omitted from the request.",
+      "evidenceType": "added",
+      "codeEvidence": "users[index] = { ...users[index], ...req.body };"
+    }
+  ]
+}

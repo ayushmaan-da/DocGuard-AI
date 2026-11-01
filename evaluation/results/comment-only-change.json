@@ -1,0 +1,25 @@
+{
+  "id": "comment-only-change",
+  "category": "non-behavioral change",
+  "description": "A comment changes without changing endpoint behavior.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users.",
+      "reason": "The documentation claims that GET /users returns a JSON array of users, but the old code used 'Return the full collection' and the new code uses 'Send all records', which are equivalent and do not contradict the documentation.",
+      "evidenceType": "removed",
+      "codeEvidence": "  // Return the full collection."
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that GET /users returns a JSON array of users, but the old code used 'Return the full collection' and the new code uses 'Send all records', which are equivalent and do not contradict the documentation.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

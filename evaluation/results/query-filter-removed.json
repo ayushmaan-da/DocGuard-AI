@@ -1,0 +1,32 @@
+{
+  "id": "query-filter-removed",
+  "category": "query behavior",
+  "description": "GET /users stops applying its documented name filter.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users?name= filters the collection to users with that name.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json(users);"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users?name= filters the collection to users with that name.",
+      "reason": "The documentation claims that the endpoint filters users by name, but the updated code returns all users without filtering.",
+      "evidenceType": "removed",
+      "codeEvidence": "  const results = users.filter(user => user.name === req.query.name);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users?name= filters the collection to users with that name.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that the endpoint filters users by name, but the updated code returns all users without filtering.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}
