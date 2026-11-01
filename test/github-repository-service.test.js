@@ -185,6 +185,28 @@ test('uses an explicitly requested ref without changing its value', async () => 
   assert.ok(calls.some(({ url }) => url.endsWith('/commits/feature%2Fadd-docs')));
 });
 
+test('documentation-only ingestion retrieves docs without downloading repository source files', async () => {
+  const sourceEntries = Array.from({ length: 60 }, (_, index) => (
+    createBlobEntry(`src/file-${index}.js`, `export const value${index} = ${index};`)
+  ));
+  const readme = createBlobEntry('README.md', '# Repository docs\n');
+  const entries = [...sourceEntries, readme];
+  const { calls, fetchImpl } = createGitHubMock({
+    tree: { tree: entries, truncated: false },
+  });
+
+  const result = await ingestGitHubRepository(
+    { repositoryUrl: 'https://github.com/example/project', ref: COMMIT_SHA },
+    { fetchImpl, documentationOnly: true },
+  );
+
+  assert.deepEqual(result.analyserInput.sourceFiles, []);
+  assert.equal(result.analyserInput.documentation.files[0].sourcePath, 'README.md');
+  assert.equal(result.analyserInput.documentation.files[0].content, '# Repository docs\n');
+  assert.equal(calls.some(({ url }) => url.includes(sourceEntries[0].sha)), false);
+  assert.equal(calls.some(({ url }) => url.includes(readme.sha)), true);
+});
+
 test('supports an empty repository tree', async () => {
   const { fetchImpl } = createGitHubMock({ tree: { tree: [], truncated: false } });
   const result = await ingestGitHubRepository(

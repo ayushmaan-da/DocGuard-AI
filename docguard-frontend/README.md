@@ -1,16 +1,36 @@
-# React + Vite
+# DocGuard AI frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Local development
 
-Currently, two official plugins are available:
+Start the backend from the repository root in a separate terminal:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+export OLLAMA_MODEL='your-installed-model'
+npm start
+```
 
-## React Compiler
+The backend defaults to `http://localhost:3000`. Start the frontend from this
+directory:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```sh
+npm ci
+cp .env.example .env
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Vite defaults to `http://localhost:5173`. `VITE_API_URL` in `.env` should point
+to the backend API base URL, normally `http://localhost:3000/api`. The backend
+does not load `.env` files automatically; configure its Ollama environment in
+the backend process.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The Pull Request page analyzes exact source changes against documentation at
+the PR head revision. Confirmed deterministic findings and unverified model
+suggestions are shown separately; files without a GitHub patch are listed as
+skipped.
+
+## Validation
+
+```sh
+npm run lint
+npm run build
+```

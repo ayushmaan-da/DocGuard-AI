@@ -38,7 +38,8 @@ function sendRequest(port, path, { method = 'GET', body, headers = {} } = {}) {
         resolve({
           statusCode: response.statusCode,
           contentType: response.headers['content-type'],
-          body: JSON.parse(body),
+          headers: response.headers,
+          body: body ? JSON.parse(body) : undefined,
         });
       });
     });
@@ -74,6 +75,38 @@ test('health endpoint accepts query parameters', async (testContext) => {
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.status, 'ok');
+});
+
+test('allows Vite development origins and answers CORS preflight requests', async (testContext) => {
+  const port = await startTestServer(testContext, {
+    corsOrigins: ['http://localhost:5173'],
+  });
+  const response = await sendRequest(port, '/api/projects/from-github', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'http://localhost:5173',
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'content-type',
+    },
+  });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(response.headers['access-control-allow-origin'], 'http://localhost:5173');
+  assert.match(response.headers['access-control-allow-methods'], /POST/);
+  assert.match(response.headers['access-control-allow-headers'], /Content-Type/i);
+});
+
+test('rejects origins not explicitly allowed by the local CORS policy', async (testContext) => {
+  const port = await startTestServer(testContext, {
+    corsOrigins: ['http://localhost:5173'],
+  });
+  const response = await sendRequest(port, '/api/health', {
+    headers: { Origin: 'https://untrusted.example' },
+  });
+
+  assert.equal(response.statusCode, 403);
+  assert.equal(response.body.error.code, 'CORS_ORIGIN_NOT_ALLOWED');
+  assert.equal(response.headers['access-control-allow-origin'], undefined);
 });
 
 test('unknown routes return a JSON 404 response', async (testContext) => {
@@ -323,6 +356,35 @@ test('PR ingestion endpoint returns safe GitHub errors as consistent JSON', asyn
       message: 'GitHub API rate limit was reached.',
     },
   });
+});
+
+test('POST /api/pull-requests/analyze returns the PR-specific drift engine contract', async (testContext) => {
+  let receivedInput;
+  const expectedAnalysis = {
+    contract: 'drift-engine/v1',
+    filesAnalyzed: 1,
+    findings: [],
+    suggestions: [],
+    diagnostics: { status: 'analysis-completed', files: [] },
+  };
+  const port = await startTestServer(testContext, {
+    runPullRequestAnalysis: async (input) => {
+      receivedInput = input;
+      return {
+        source: { type: 'github-pull-request' },
+        pullRequest: { number: 42 },
+        changeContext: { sourceChanges: [] },
+        driftAnalysis: expectedAnalysis,
+      };
+    },
+  });
+  const response = await sendJsonRequest(port, '/api/pull-requests/analyze', {
+    pullRequestUrl: 'https://github.com/example/project/pull/42',
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(receivedInput, { pullRequestUrl: 'https://github.com/example/project/pull/42' });
+  assert.deepEqual(response.body.driftAnalysis, expectedAnalysis);
 });
 
 test('POST /api/projects/:projectId/analyze analyzes a stored project without re-uploading files', async (testContext) => {

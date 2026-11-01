@@ -1,10 +1,20 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { spawnSync } = require("node:child_process");
-const cases = require("./cases");
-const { addedOrRemovedLines, cleanResponse, resolveEvidenceReferences, validateFindings, buildPrompt, queryOllama } = require("../detector-core");
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import cases from './cases.js';
+import detectorCore from '../detector-core.cjs';
 
-const root = __dirname;
+const {
+  addedOrRemovedLines,
+  cleanResponse,
+  resolveEvidenceReferences,
+  validateFindings,
+  buildPrompt,
+  queryOllama,
+} = detectorCore;
+
+const root = path.dirname(fileURLToPath(import.meta.url));
 const caseRoot = path.join(root, "cases");
 const outputRoot = path.join(root, "results");
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -198,11 +208,11 @@ function writeSummary(results, metrics, model) {
   if (report.exactPasses !== report.scenarioCount) process.exitCode = 1;
 }
 
-if (require.main === module) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   main().catch(error => {
     console.error(`Evaluation failed: ${error.stack || error.message}`);
     process.exitCode = 1;
   });
 }
 
-module.exports = { scoreCase, summarize };
+export { scoreCase, summarize };

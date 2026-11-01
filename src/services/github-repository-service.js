@@ -502,6 +502,7 @@ function getDocumentationSource(uploadedPdfs, repositoryPdfs, providedText) {
 export async function ingestGitHubRepository(input, {
   fetchImpl = globalThis.fetch,
   limits = getLimits(),
+  documentationOnly = false,
 } = {}) {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
     throw new HttpError(400, 'INVALID_REQUEST', 'Request body must be a JSON object.');
@@ -558,7 +559,18 @@ export async function ingestGitHubRepository(input, {
     limits,
     context: 'repository tree',
   });
-  const { fileEntries, skippedFiles } = getRepositoryFileEntries(tree, limits);
+  const selectedTree = documentationOnly && Array.isArray(tree?.tree)
+    ? {
+      ...tree,
+      tree: tree.tree.filter((entry) => (
+        entry?.type !== 'blob'
+        || typeof entry.path !== 'string'
+        || isDocumentationPath(entry.path)
+        || extname(entry.path).toLowerCase() === '.pdf'
+      )),
+    }
+    : tree;
+  const { fileEntries, skippedFiles } = getRepositoryFileEntries(selectedTree, limits);
 
   const files = [];
   const sourceFiles = [];
@@ -732,7 +744,9 @@ export async function ingestGitHubRepository(input, {
     return result;
   });
   project.project.files = processedFiles;
-  const repositoryPdfDocuments = storePdfDocuments(pendingRepositoryPdfs, { limits: pdfLimits });
+  const repositoryPdfDocuments = documentationOnly
+    ? pendingRepositoryPdfs.map(({ document }) => document)
+    : storePdfDocuments(pendingRepositoryPdfs, { limits: pdfLimits });
   const selectedReadme = selectReadme(project.project.files);
   const hasPdfDocumentation = uploadedPdfDocuments.length > 0 || repositoryPdfDocuments.length > 0;
   const documentationSource = hasPdfDocumentation

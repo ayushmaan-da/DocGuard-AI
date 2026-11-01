@@ -1,118 +1,117 @@
 import { Link } from "react-router-dom";
 import { GitPullRequest } from "lucide-react";
 
-import DriftDiff from "../components/DriftDiff";
 import SeverityTag from "../components/SeverityTag";
-import { mockIssues, mockRepositories } from "../data/mockData";
+import { useWorkflow } from "../workflow-context";
 
 import "./Dashboard.css";
 
-const recentPullRequests = [
-  { id: "express-api#142", repository: "express-api", number: 142, title: "Update server configuration", issues: 3, checked: "10 minutes ago" },
-  { id: "react-dashboard#89", repository: "react-dashboard", number: 89, title: "Refactor authentication", issues: 0, checked: "1 hour ago" },
-  { id: "payment-service#56", repository: "payment-service", number: 56, title: "Change payment API parameters", issues: 2, checked: "3 hours ago" }
-];
-
-const severityOrder = ["Critical", "High", "Medium", "Low"];
-
 const Dashboard = () => {
-  const openIssues = mockIssues.filter((i) => i.status === "Open");
-  const topIssue = [...openIssues].sort(
-    (a, b) => severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity)
-  )[0];
-
-  const prsChecked = mockRepositories.reduce((sum, r) => sum + r.analyzedPRs, 0);
-  const avgHealth = Math.round(
-    mockRepositories.reduce((sum, r) => sum + r.health, 0) / mockRepositories.length
-  );
-
-  const headline =
-    openIssues.length === 0
-      ? "Your docs match your code"
-      : `${openIssues.length} open ${openIssues.length === 1 ? "issue" : "issues"} where docs and code disagree`;
+  const { projects, pullRequests } = useWorkflow();
+  const analyzed = projects
+    .filter((project) => project.analysis)
+    .sort((left, right) => Date.parse(right.analyzedAt ?? 0) - Date.parse(left.analyzedAt ?? 0));
+  const findings = analyzed.flatMap((project) => (
+    Array.isArray(project.analysis.findings)
+      ? project.analysis.findings.map((finding, index) => ({
+        ...finding,
+        id: `${project.projectId}-${index}`,
+        repositoryName: project.repositoryName ?? project.source?.repositoryUrl ?? "Project",
+        projectId: project.projectId
+      }))
+      : []
+  ));
+  const urgentFinding = findings[0];
+  const recentProjects = [...projects].sort((a, b) => (
+    Date.parse(b.analyzedAt ?? b.createdAt ?? 0) - Date.parse(a.analyzedAt ?? a.createdAt ?? 0)
+  )).slice(0, 5);
+  const recentPullRequests = pullRequests.slice(0, 5);
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
-          <h1>{headline}</h1>
-          <p>Checked across {mockRepositories.length} repositories. Most recent check ran 10 minutes ago.</p>
+          <h1>{projects.length ? "Workspace overview" : "Connect a repository to get started"}</h1>
+          <p>
+            {projects.length
+              ? "Projects and findings returned by the backend during this browser session."
+              : "Run a backend analysis of a public GitHub repository and its documentation."}
+          </p>
         </div>
-        <Link to="/pull-requests" className="btn">
+        <Link to="/repositories" className="btn">
           <GitPullRequest size={16} />
-          Check a pull request
+          Analyze a repository
         </Link>
       </header>
 
-      {topIssue && (
+      <dl className="summary">
+        <div><dt>Repositories submitted</dt><dd>{projects.length}</dd></div>
+        <div><dt>Completed analyses</dt><dd>{analyzed.length}</dd></div>
+        <div><dt>Backend findings</dt><dd>{findings.length}</dd></div>
+      </dl>
+
+      {urgentFinding && (
         <section className="dash-lead" aria-labelledby="lead-title">
           <div className="dash-lead-meta">
-            <h2 id="lead-title">Most urgent</h2>
-            <SeverityTag severity={topIssue.severity} />
-            <span className="muted">{topIssue.repository}</span>
+            <h2 id="lead-title">Latest finding</h2>
+            <SeverityTag severity={urgentFinding.severity} />
+            <span className="muted">{urgentFinding.repositoryName}</span>
           </div>
-          <p className="dash-lead-text">{topIssue.description}</p>
-          <DriftDiff
-            file={topIssue.file}
-            line={topIssue.line}
-            documented={topIssue.documented}
-            actual={topIssue.actual}
-          />
-          <Link to="/analysis-results" className="link-button">Review this issue</Link>
+          <h3>{urgentFinding.title ?? "Untitled finding"}</h3>
+          {typeof urgentFinding.explanation === "string" && <p className="dash-lead-text">{urgentFinding.explanation}</p>}
+          {typeof urgentFinding.recommendation === "string" && urgentFinding.recommendation && (
+            <p><strong>Recommendation:</strong> {urgentFinding.recommendation}</p>
+          )}
+          <Link to="/analysis-results" className="link-button">Review analysis results</Link>
         </section>
       )}
 
-      <dl className="summary">
-        <div><dt>Repositories</dt><dd>{mockRepositories.length}</dd></div>
-        <div><dt>Pull requests checked</dt><dd>{prsChecked}</dd></div>
-        <div><dt>Docs in sync</dt><dd>{avgHealth}%</dd></div>
-      </dl>
-
       <div className="dash-grid">
-        <section aria-labelledby="prs-title">
-          <h2 id="prs-title" className="section-title">Recent pull requests</h2>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr><th>Pull request</th><th>Result</th><th>Checked</th></tr>
-              </thead>
-              <tbody>
-                {recentPullRequests.map((pr) => (
-                  <tr key={pr.id}>
-                    <td>
-                      <strong>{pr.title}</strong>
-                      <div className="muted">{pr.repository} #{pr.number}</div>
-                    </td>
-                    <td>
-                      <span className={`status ${pr.issues === 0 ? "clean" : "warning"}`}>
-                        {pr.issues === 0 ? "In sync" : `${pr.issues} ${pr.issues === 1 ? "issue" : "issues"}`}
-                      </span>
-                    </td>
-                    <td className="muted">{pr.checked}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <section aria-labelledby="projects-title">
+          <h2 id="projects-title" className="section-title">Recent repository analyses</h2>
+          {recentProjects.length === 0 ? (
+            <div className="empty">No repositories have been submitted in this session.</div>
+          ) : (
+            <ul className="dashboard-projects">
+              {recentProjects.map((project) => (
+                <li key={project.projectId}>
+                  <div>
+                    <strong>{project.repositoryName ?? project.source?.repositoryUrl ?? "Project"}</strong>
+                    <div className="muted">
+                      {project.source?.ref ?? "Default branch"}
+                      {project.analyzedAt ? ` · analyzed ${new Date(project.analyzedAt).toLocaleString()}` : " · not analyzed"}
+                    </div>
+                  </div>
+                  <span>{Array.isArray(project.analysis?.findings) ? project.analysis.findings.length : "—"} findings</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        <section aria-labelledby="health-title">
-          <h2 id="health-title" className="section-title">Docs in sync, by repository</h2>
-          <ul className="health-list">
-            {[...mockRepositories].sort((a, b) => a.health - b.health).map((repo) => (
-              <li key={repo.id}>
-                <div className="health-row">
-                  <span>{repo.name}</span>
-                  <strong>{repo.health}%</strong>
-                </div>
-                <div className="bar" role="img" aria-label={`${repo.health}% in sync`}>
-                  <div style={{ width: `${repo.health}%` }} />
-                </div>
-              </li>
-            ))}
-          </ul>
+        <section aria-labelledby="prs-title">
+          <h2 id="prs-title" className="section-title">Recently fetched pull requests</h2>
+          {recentPullRequests.length === 0 ? (
+            <div className="empty">No pull request changes have been fetched in this session.</div>
+          ) : (
+            <ul className="dashboard-projects">
+              {recentPullRequests.map((item) => (
+                <li key={item.pullRequest?.url}>
+                  <div>
+                    <strong>{item.pullRequest?.title ?? item.pullRequest?.url ?? "Pull request"}</strong>
+                    <div className="muted">{item.source?.repositoryUrl}</div>
+                  </div>
+                  <span>{item.changeContext?.summary?.totalFiles ?? 0} files · changes fetched</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
+
+      {!urgentFinding && analyzed.length > 0 && (
+        <p className="dashboard-clean-note">The most recent backend analysis returned no findings.</p>
+      )}
     </div>
   );
 };

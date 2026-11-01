@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const { analyze } = require("./drift-engine");
+const { analyze } = require("./drift-engine.cjs");
 
 const originalCode = `app.get("/users", (req, res) => {
   res.json({
@@ -149,6 +149,23 @@ test("accepts multiple documentation files and reports the matching file and lin
   });
   assert.equal(result.findings[0].documentation.file, "docs/users.md");
   assert.equal(result.findings[0].documentation.line, 3);
+});
+
+test("preserves PDF page references from extracted documentation", async () => {
+  const sentence = "GET /users returns a JSON object with a count field.";
+  const result = await analyze({
+    diff,
+    docs: [{
+      file: "docs/guide.pdf",
+      content: `--- Page 1 ---\nUnrelated text.\n\n--- Page 2 ---\n${sentence}`,
+      pages: [{ pageNumber: 1, text: "Unrelated text." }, { pageNumber: 2, text: sentence }]
+    }],
+    originalCode,
+    updatedCode,
+    callModel: async () => ({ findings: [] })
+  });
+  assert.equal(result.findings[0].documentation.file, "docs/guide.pdf");
+  assert.equal(result.findings[0].documentation.pageNumber, 2);
 });
 
 test("keeps deterministic findings available if the model request fails", async () => {

@@ -1,13 +1,20 @@
+import { createHash } from 'node:crypto';
 import { processProjectInput } from './project-input-service.js';
 import { classifyGitHubPath } from './github-repository-service.js';
 import { HttpError } from '../utils/http-error.js';
-import { parseGitHubPullRequestUrl, validateGitHubRef } from '../utils/github-repository-url.js';
+import {
+  parseGitHubPullRequestUrl,
+  parseGitHubRepositoryUrl,
+  validateGitHubRef,
+} from '../utils/github-repository-url.js';
 
 const DEFAULT_LIMITS = {
   maxFiles: 100,
   maxResponseBytes: 12 * 1024 * 1024,
   maxPatchBytes: 256 * 1024,
   maxTotalPatchBytes: 2 * 1024 * 1024,
+  maxSourceFileBytes: 1024 * 1024,
+  maxAnalyzedSourceFiles: 5,
   requestTimeoutMs: 10_000,
 };
 const FILES_PER_PAGE = 100;
@@ -33,6 +40,12 @@ function getLimits() {
     maxResponseBytes: readLimit('GITHUB_PR_MAX_RESPONSE_BYTES', DEFAULT_LIMITS.maxResponseBytes),
     maxPatchBytes: readLimit('GITHUB_PR_MAX_PATCH_BYTES', DEFAULT_LIMITS.maxPatchBytes),
     maxTotalPatchBytes: readLimit('GITHUB_PR_MAX_TOTAL_PATCH_BYTES', DEFAULT_LIMITS.maxTotalPatchBytes),
+    maxSourceFileBytes: readLimit('GITHUB_PR_MAX_SOURCE_FILE_BYTES', DEFAULT_LIMITS.maxSourceFileBytes),
+    maxAnalyzedSourceFiles: readLimit(
+      'GITHUB_PR_MAX_ANALYSIS_SOURCE_FILES',
+      DEFAULT_LIMITS.maxAnalyzedSourceFiles,
+      20,
+    ),
     requestTimeoutMs: readLimit('GITHUB_PR_REQUEST_TIMEOUT_MS', DEFAULT_LIMITS.requestTimeoutMs),
   };
 }
@@ -145,6 +158,22 @@ function validatePullRequestMetadata(metadata, parsedUrl) {
   if (metadata.base.repo.private === true) {
     throw new HttpError(404, 'GITHUB_PULL_REQUEST_NOT_FOUND', 'Pull Request was not found or is not public.');
   }
+  let headRepositoryUrl;
+  if (metadata.head.repo !== undefined && metadata.head.repo !== null) {
+    const headRepository = metadata.head.repo;
+    if (isRecord(headRepository) && headRepository.private === true) {
+      throw new HttpError(404, 'GITHUB_PULL_REQUEST_NOT_FOUND', 'Pull Request was not found or is not public.');
+    }
+    if (!isRecord(headRepository) || headRepository.private !== false || typeof headRepository.full_name !== 'string') {
+      throw new HttpError(502, 'INVALID_GITHUB_PULL_REQUEST', 'GitHub returned invalid Pull Request head repository metadata.');
+    }
+    try {
+      const parsedHeadRepository = parseGitHubRepositoryUrl(`https://github.com/${headRepository.full_name}`);
+      headRepositoryUrl = parsedHeadRepository.repositoryUrl;
+    } catch {
+      throw new HttpError(502, 'INVALID_GITHUB_PULL_REQUEST', 'GitHub returned an invalid Pull Request head repository.');
+    }
+  }
   const fullName = metadata.base.repo.full_name;
   if (
     typeof fullName !== 'string'
@@ -190,6 +219,7 @@ function validatePullRequestMetadata(metadata, parsedUrl) {
     head: {
       branch: metadata.head.ref,
       commitSha: metadata.head.sha,
+      ...(headRepositoryUrl ? { repositoryUrl: headRepositoryUrl } : {}),
     },
     changedFiles: metadata.changed_files,
   };
@@ -291,9 +321,64 @@ function createChangeRecord(file, limits, patchBytesUsed) {
   };
 }
 
+async function fetchPullRequestSourceFile(apiBase, filePath, ref, { fetchImpl, limits }) {
+  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
+  const file = await fetchGitHubJson(
+    `${apiBase}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`,
+    { fetchImpl, limits, context: 'Pull Request source file' },
+  );
+  if (
+    !isRecord(file)
+    || file.path !== filePath
+    || file.encoding !== 'base64'
+    || typeof file.content !== 'string'
+    || !Number.isSafeInteger(file.size)
+    || file.size < 0
+    || typeof file.sha !== 'string'
+    || !/^[a-f0-9]{40,64}$/i.test(file.sha)
+  ) {
+    throw new HttpError(502, 'INVALID_GITHUB_SOURCE_FILE', `GitHub returned invalid source-file data for "${filePath}".`);
+  }
+  if (file.size > (limits.maxSourceFileBytes ?? DEFAULT_LIMITS.maxSourceFileBytes)) {
+    throw new HttpError(413, 'PULL_REQUEST_SOURCE_FILE_TOO_LARGE', `Source file "${filePath}" exceeds the configured Pull Request analysis size limit.`);
+  }
+
+  const base64Content = file.content.replace(/\s/g, '');
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64Content)) {
+    throw new HttpError(502, 'INVALID_GITHUB_SOURCE_FILE', `GitHub returned invalid encoded source for "${filePath}".`);
+  }
+  const bytes = Buffer.from(base64Content, 'base64');
+  if (bytes.length !== file.size) {
+    throw new HttpError(502, 'INVALID_GITHUB_SOURCE_FILE', `GitHub returned an incomplete source file for "${filePath}".`);
+  }
+  const hashAlgorithm = file.sha.length === 64 ? 'sha256' : 'sha1';
+  const calculatedSha = createHash(hashAlgorithm)
+    .update(`blob ${bytes.length}\0`)
+    .update(bytes)
+    .digest('hex');
+  if (calculatedSha !== file.sha.toLowerCase()) {
+    throw new HttpError(502, 'INVALID_GITHUB_SOURCE_FILE', `GitHub returned source that does not match the repository blob identifier for "${filePath}".`);
+  }
+
+  let content;
+  try {
+    content = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new HttpError(422, 'UNSUPPORTED_PULL_REQUEST_SOURCE_ENCODING', `Source file "${filePath}" is not valid UTF-8 and cannot be analyzed.`);
+  }
+  if ([...content].some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint < 32 && codePoint !== 9 && codePoint !== 10 && codePoint !== 12 && codePoint !== 13;
+  })) {
+    throw new HttpError(422, 'UNSUPPORTED_PULL_REQUEST_SOURCE_CONTENT', `Source file "${filePath}" contains unsupported control characters.`);
+  }
+  return content;
+}
+
 export async function ingestGitHubPullRequest(input, {
   fetchImpl = globalThis.fetch,
   limits = getLimits(),
+  includeSourceContents = false,
 } = {}) {
   if (!isRecord(input)) {
     throw new HttpError(400, 'INVALID_REQUEST', 'Request body must be a JSON object.');
@@ -305,6 +390,10 @@ export async function ingestGitHubPullRequest(input, {
     { fetchImpl, limits, context: 'Pull Request' },
   );
   const pullRequest = validatePullRequestMetadata(metadataResponse, parsedUrl);
+  const headRepository = pullRequest.head.repositoryUrl
+    ? parseGitHubRepositoryUrl(pullRequest.head.repositoryUrl)
+    : parsedUrl;
+  const headApiBase = `https://api.github.com/repos/${headRepository.owner}/${headRepository.repository}`;
 
   if (pullRequest.changedFiles > MAX_GITHUB_PULL_REQUEST_FILES) {
     throw new HttpError(413, 'PULL_REQUEST_FILE_LIMIT_EXCEEDED', `GitHub exposes at most ${MAX_GITHUB_PULL_REQUEST_FILES} changed files for one Pull Request.`);
@@ -383,6 +472,50 @@ export async function ingestGitHubPullRequest(input, {
     }
   }
 
+  let sourceSnapshots;
+  if (includeSourceContents) {
+    if (changeContext.sourceChanges.length > (limits.maxAnalyzedSourceFiles ?? DEFAULT_LIMITS.maxAnalyzedSourceFiles)) {
+      throw new HttpError(
+        413,
+        'PULL_REQUEST_ANALYSIS_FILE_LIMIT_EXCEEDED',
+        `Pull Request has more source changes than the configured analysis limit of ${limits.maxAnalyzedSourceFiles ?? DEFAULT_LIMITS.maxAnalyzedSourceFiles}.`,
+      );
+    }
+    sourceSnapshots = await Promise.all(changeContext.sourceChanges.map(async (change) => {
+      if (change.patchStatus !== 'available') {
+        return {
+          path: change.path,
+          diff: null,
+          originalCode: null,
+          updatedCode: null,
+          skipReason: change.patchUnavailableReason ?? 'patch-unavailable',
+        };
+      }
+
+      const originalPath = change.originalPath ?? change.path;
+      const [originalCode, updatedCode] = await Promise.all([
+        change.status === 'added'
+          ? ''
+          : fetchPullRequestSourceFile(apiBase, originalPath, pullRequest.base.commitSha, {
+            fetchImpl,
+            limits,
+          }),
+        change.status === 'removed'
+          ? ''
+          : fetchPullRequestSourceFile(headApiBase, change.path, pullRequest.head.commitSha, {
+            fetchImpl,
+            limits,
+          }),
+      ]);
+      return {
+        path: change.path,
+        diff: change.patch,
+        originalCode,
+        updatedCode,
+      };
+    }));
+  }
+
   return {
     source: {
       type: 'github-pull-request',
@@ -399,5 +532,6 @@ export async function ingestGitHubPullRequest(input, {
       head: pullRequest.head,
     },
     changeContext,
+    ...(sourceSnapshots ? { sourceSnapshots } : {}),
   };
 }

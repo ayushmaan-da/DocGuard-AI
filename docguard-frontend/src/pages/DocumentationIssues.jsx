@@ -2,31 +2,53 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 
 import SeverityTag from "../components/SeverityTag";
-import { mockIssues } from "../data/mockData";
+import { useWorkflow } from "../workflow-context";
 
 import "./DocumentationIssues.css";
 
+function getPathReferences(references) {
+  return Array.isArray(references)
+    ? references.filter((reference) => reference && typeof reference.path === "string")
+    : [];
+}
+
 const DocumentationIssues = () => {
+  const { projects } = useWorkflow();
   const [search, setSearch] = useState("");
   const [severity, setSeverity] = useState("All");
-  const [status, setStatus] = useState("All");
 
-  const q = search.toLowerCase();
-  const issues = mockIssues.filter(
-    (issue) =>
-      (issue.file.toLowerCase().includes(q) ||
-        issue.repository.toLowerCase().includes(q) ||
-        issue.description.toLowerCase().includes(q)) &&
-      (severity === "All" || issue.severity === severity) &&
-      (status === "All" || issue.status === status)
-  );
+  const findings = projects.flatMap((project) => (
+    Array.isArray(project.analysis?.findings)
+      ? project.analysis.findings.map((finding, index) => ({
+        ...finding,
+        id: `${project.projectId}-${index}`,
+        repository: project.repositoryName ?? project.source?.repositoryUrl ?? "Project",
+        projectId: project.projectId
+      }))
+      : []
+  ));
+  const query = search.toLowerCase();
+  const visible = findings.filter((finding) => {
+    const sourcePaths = getPathReferences(finding.sourceReferences).map((reference) => reference.path);
+    const documentationPaths = getPathReferences(finding.documentationReferences).map((reference) => reference.path);
+    const searchable = [
+      finding.repository,
+      finding.title,
+      finding.explanation,
+      finding.recommendation,
+      ...sourcePaths,
+      ...documentationPaths
+    ].filter((value) => typeof value === "string").join(" ").toLowerCase();
+    return searchable.includes(query)
+      && (severity === "All" || String(finding.severity ?? "info").toLowerCase() === severity.toLowerCase());
+  });
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
-          <h1>Documentation issues</h1>
-          <p>Every place DocGuard found docs that no longer match the code.</p>
+          <h1>Documentation findings</h1>
+          <p>Findings returned by the backend analyses in this browser session.</p>
         </div>
       </header>
 
@@ -34,57 +56,80 @@ const DocumentationIssues = () => {
         <label className="input">
           <Search size={16} />
           <input
-            placeholder="Search by file, repository or description"
-            aria-label="Search issues"
+            placeholder="Search repository, file or finding"
+            aria-label="Search findings"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
         </label>
 
-        <select value={severity} onChange={(e) => setSeverity(e.target.value)} aria-label="Severity">
+        <select value={severity} onChange={(event) => setSeverity(event.target.value)} aria-label="Severity">
           <option value="All">All severities</option>
-          <option>Critical</option>
-          <option>High</option>
-          <option>Medium</option>
-          <option>Low</option>
-        </select>
-
-        <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
-          <option value="All">All statuses</option>
-          <option>Open</option>
-          <option>Resolved</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="info">Info</option>
         </select>
       </div>
 
       <p className="muted issues-count" role="status">
-        {issues.length} {issues.length === 1 ? "issue" : "issues"}
+        {visible.length} {visible.length === 1 ? "finding" : "findings"}
       </p>
 
-      {issues.length === 0 ? (
+      {visible.length === 0 ? (
         <div className="empty">
-          <strong>No issues match these filters</strong>
-          Clear the search or choose “All” to see everything.
+          <strong>{findings.length ? "No findings match these filters" : "No backend findings are available"}</strong>
+          {findings.length
+            ? "Clear the search or choose “All severities” to see other findings."
+            : "Connect and analyze a repository to see real results here."}
         </div>
       ) : (
         <div className="table-wrap">
           <table className="table issues-table">
             <thead>
               <tr>
-                <th>File</th>
                 <th>Repository</th>
-                <th>Issue</th>
+                <th>Finding</th>
+                <th>Source references</th>
+                <th>Documentation references</th>
                 <th>Severity</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {issues.map((issue) => (
-                <tr key={issue.id}>
-                  <td className="path">{issue.file}:{issue.line}</td>
-                  <td>{issue.repository}</td>
-                  <td>{issue.description}</td>
-                  <td><SeverityTag severity={issue.severity} /></td>
-                  <td><span className={`status ${issue.status.toLowerCase()}`}>{issue.status}</span></td>
+              {visible.map((finding) => (
+                <tr key={finding.id}>
+                  <td>{finding.repository}</td>
+                  <td>
+                    <strong>{finding.title ?? "Untitled finding"}</strong>
+                    {typeof finding.explanation === "string" && <p>{finding.explanation}</p>}
+                    {typeof finding.recommendation === "string" && finding.recommendation && (
+                      <p className="muted"><strong>Recommendation:</strong> {finding.recommendation}</p>
+                    )}
+                  </td>
+                  <td>
+                    {getPathReferences(finding.sourceReferences).map((reference, index) => (
+                      <div className="path" key={`${reference.path}-${index}`}>
+                        {reference.path}
+                        {Number.isSafeInteger(reference.startLine) ? `:${reference.startLine}` : ""}
+                        {Number.isSafeInteger(reference.endLine) && reference.endLine !== reference.startLine
+                          ? `-${reference.endLine}`
+                          : ""}
+                      </div>
+                    ))}
+                    {getPathReferences(finding.sourceReferences).length === 0 && "—"}
+                  </td>
+                  <td>
+                    {getPathReferences(finding.documentationReferences).map((reference, index) => (
+                      <div key={`${reference.path}-${index}`}>
+                        <span className="path">{reference.path}</span>
+                        {Number.isSafeInteger(reference.pageNumber) ? `, page ${reference.pageNumber}` : ""}
+                        {typeof reference.quote === "string" && reference.quote && <blockquote>{reference.quote}</blockquote>}
+                      </div>
+                    ))}
+                    {getPathReferences(finding.documentationReferences).length === 0 && "—"}
+                  </td>
+                  <td><SeverityTag severity={finding.severity} /></td>
                 </tr>
               ))}
             </tbody>

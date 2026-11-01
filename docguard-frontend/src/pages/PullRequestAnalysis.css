@@ -21,3 +21,19 @@
 .remove-file:hover { background: var(--del-bg); color: var(--del); }
 
 .form-error { margin-bottom: 20px; padding: 12px 14px; background: var(--del-bg); color: var(--del); border-left: 3px solid var(--del); border-radius: 4px; }
+.pr-capability-note { margin: 24px 0; padding: 14px 16px; background: var(--mark-soft); border-left: 3px solid var(--mark); border-radius: 4px; }
+.pr-capability-note a { font-weight: 600; }
+.pr-result { margin-top: 40px; }
+.pr-drift-analysis { margin-top: 32px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
+.pr-drift-analysis h2, .pr-drift-analysis h3 { margin: 18px 0 10px; }
+.pr-drift-analysis h2:first-child { margin-top: 0; }
+.pr-drift-analysis li { margin: 12px 0; }
+.pr-drift-analysis code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.pr-result .page-head { align-items: flex-start; margin-bottom: 20px; }
+.pr-result .page-head h2 a { text-decoration-thickness: 1px; }
+.pr-change-group { margin-top: 28px; }
+.pr-change-group h3 { margin-bottom: 12px; }
+.pr-change-group ul { list-style: none; border-top: 1px solid var(--line); }
+.pr-change-group li { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.pr-change-group details summary { cursor: pointer; font-weight: 600; }
+.pr-change-group pre { max-height: 360px; overflow: auto; margin-top: 8px; padding: 12px; background: var(--surface); border: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; }

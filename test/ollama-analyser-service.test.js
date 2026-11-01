@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getOllamaConfiguration, analyzeWithOllama } from '../src/services/ollama-analyser-service.js';
+import {
+  getOllamaConfiguration,
+  analyzeWithOllama,
+  callOllamaPrompt,
+} from '../src/services/ollama-analyser-service.js';
 import { validateAnalyserOutput } from '../src/services/analyser-response-validator.js';
 import { createAnalyserOutput, ollamaResponse } from '../test-fixtures/analyser-output.js';
 
@@ -192,6 +196,44 @@ test('rejects oversized prepared inputs without contacting Ollama', async () => 
     analyzeWithOllama(PROJECT, {
       configuration: configuration({ maxInputBytes: 10 }),
       fetchImpl: async () => assert.fail('must not fetch an oversized input'),
+    }),
+    (error) => error.statusCode === 413 && error.code === 'ANALYSER_INPUT_TOO_LARGE',
+  );
+});
+
+test('sends engine prompts through the shared Ollama configuration and parses JSON output', async () => {
+  let requestUrl;
+  let requestOptions;
+  const result = await callOllamaPrompt('A constrained drift prompt.', {
+    configuration: configuration(),
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+      return ollamaResponse({ findings: [] });
+    },
+  });
+
+  assert.equal(requestUrl, 'http://127.0.0.1:11434/api/chat');
+  const request = JSON.parse(requestOptions.body);
+  assert.equal(request.model, 'test-model');
+  assert.equal(request.format, 'json');
+  assert.match(request.messages[0].content, /untrusted data/);
+  assert.equal(request.messages[1].content, 'A constrained drift prompt.');
+  assert.deepEqual(result, { findings: [] });
+});
+
+test('rejects unconfigured or oversized engine prompts without contacting Ollama', async () => {
+  await assert.rejects(
+    callOllamaPrompt('prompt', {
+      configuration: configuration({ model: '' }),
+      fetchImpl: async () => assert.fail('must not fetch without a configured model'),
+    }),
+    (error) => error.code === 'ANALYSER_NOT_CONFIGURED',
+  );
+  await assert.rejects(
+    callOllamaPrompt('a prompt that is too large', {
+      configuration: configuration({ maxInputBytes: 2 }),
+      fetchImpl: async () => assert.fail('must not fetch an oversized prompt'),
     }),
     (error) => error.statusCode === 413 && error.code === 'ANALYSER_INPUT_TOO_LARGE',
   );

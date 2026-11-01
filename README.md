@@ -59,9 +59,9 @@ Currently, the backend provides:
   are validated, classified, and kept in memory with their original paths and
   text content. The response exposes original source files separately from
   plain-text documentation prepared for the analyser integration.
-- Stateless GitHub Pull Request change-context ingestion using the official
-  REST API. PR metadata and bounded file patches are returned with source,
-  documentation, binary-extension, and other changes in separate collections.
+- GitHub Pull Request analysis using exact base/head source snapshots, bounded
+  GitHub patches, and documentation retrieved at the PR head revision. Verified
+  deterministic findings are kept separate from unverified model suggestions.
 - Multipart PDF upload and PDF text extraction for uploaded documents and
   PDFs found in GitHub repositories. Original PDFs remain available through
   short-lived in-memory references; extracted text and page numbers are kept
@@ -70,11 +70,13 @@ Currently, the backend provides:
   source and documentation records, validates the analyser response, and
   returns it to the frontend.
 
-GitHub ingestion is one supported backend input route, but the final frontend
-input workflow is not yet agreed. The backend does not yet support ZIP upload
-or persistent project storage. The backend does not implement its own
-semantic code analysis, documentation drift detection, or AI reasoning; those
-responsibilities are delegated to the configured Ollama model.
+The React frontend connects to the backend for health checks, public GitHub
+repository ingestion, optional PDF uploads, and project analysis. Repository
+references and analysis results remain temporary and are kept in the current
+browser session. Pull Request analysis uses the deterministic drift engine
+alongside the configured Ollama model; repository snapshot analysis continues
+to use the validated project-analysis contract. The backend does not yet
+support ZIP upload or persistent project storage.
 
 ### Normalized project input
 
@@ -224,7 +226,7 @@ Intentionally excluded generated/dependency directories, symlinks, submodules,
 and files not suitable for text handoff are listed in `analyserInput.skippedFiles`
 and may generate a `REPOSITORY_FILES_NOT_IN_TEXT_HANDOFF` warning.
 
-## GitHub Pull Request change context
+## GitHub Pull Request context and analysis
 
 `POST /api/pull-requests/from-github` accepts a JSON body containing a public
 GitHub Pull Request URL. Only direct HTTPS URLs on `github.com` in the
@@ -232,6 +234,14 @@ GitHub Pull Request URL. Only direct HTTPS URLs on `github.com` in the
 
 ```sh
 curl -X POST http://localhost:3000/api/pull-requests/from-github \
+  -H 'Content-Type: application/json' \
+  -d '{"pullRequestUrl":"https://github.com/owner/repository/pull/42"}'
+```
+
+For the same metadata and change context plus drift analysis, call:
+
+```sh
+curl -X POST http://localhost:3000/api/pull-requests/analyze \
   -H 'Content-Type: application/json' \
   -d '{"pullRequestUrl":"https://github.com/owner/repository/pull/42"}'
 ```
@@ -298,17 +308,24 @@ configured limit, `patch` is `null` and `patchStatus` and
 }
 ```
 
-The handler uses the GitHub Pull Request detail endpoint and paginates the
-official changed-files endpoint (`per_page=100`). It checks that the file
-count matches the PR metadata and rejects incomplete responses rather than
-returning a partial context. No source project is overwritten or stored, and
-this Stage 6B endpoint does not invoke Ollama or perform drift analysis.
-Classification follows the existing repository-ingestion extension allowlists;
-it is path-based because this endpoint does not download changed-file blobs.
-GitHub may omit patches (for example, for binary or large changes); in that
-case the reason is reported as unavailable rather than fabricating a diff.
-Known binary extensions are grouped separately, but extension classification
-does not validate the underlying bytes.
+The context endpoint only retrieves metadata and patches. For documentation
+drift analysis, use `POST /api/pull-requests/analyze` with the same request
+body. It retrieves each eligible changed source file at the exact base and
+head commit, validates its Git blob hash and UTF-8 content, and retrieves
+repository documentation at the head commit. It never treats a partial patch
+as a complete source file. GitHub files without a patch are explicitly listed
+as skipped; they are not analyzed with fabricated diffs. The response follows
+`drift-engine/v1`: deterministic, evidence-backed findings appear in
+`findings`, while model-only output appears separately in `suggestions` with
+`unverified-model-suggestion` verification. The existing project-analysis
+endpoint and response contract are unchanged.
+
+The PR analysis is bounded. It rejects requests exceeding the configured
+changed-source-file count or per-source-file byte limit. Repository docs are
+retrieved without downloading unrelated source files. Ollama failures remain
+visible in per-file diagnostics; deterministic findings are retained when the
+model is unavailable. PR analysis is stateless and does not store source
+snapshots on the backend.
 
 | Variable | Default | Purpose |
 | --- | ---: | --- |
@@ -316,13 +333,15 @@ does not validate the underlying bytes.
 | `GITHUB_PR_MAX_RESPONSE_BYTES` | 12 MiB | Maximum individual GitHub JSON response |
 | `GITHUB_PR_MAX_PATCH_BYTES` | 256 KiB | Maximum retained patch for one file |
 | `GITHUB_PR_MAX_TOTAL_PATCH_BYTES` | 2 MiB | Maximum total retained patch data |
+| `GITHUB_PR_MAX_SOURCE_FILE_BYTES` | 1 MiB | Maximum full source file retrieved for PR analysis |
+| `GITHUB_PR_MAX_ANALYSIS_SOURCE_FILES` | 5 | Maximum changed source files analyzed per PR (maximum supported: 20) |
 | `GITHUB_PR_REQUEST_TIMEOUT_MS` | 10,000 | Timeout for each GitHub API request |
 
 By default, the endpoint uses unauthenticated GitHub REST API requests.
 Optionally set `GITHUB_TOKEN` in the backend process environment to send a
 GitHub Personal Access Token as `Authorization: Bearer ...` for the PR
-metadata request and all changed-file pagination requests. This can increase
-the applicable GitHub API rate limit. Configure the token through a trusted
+metadata, changed-file, source-content, and repository-documentation requests.
+This can increase the applicable GitHub API rate limit. Configure the token through a trusted
 environment or secret manager; do not put a real token in source control,
 README files, shell command history, or application logs. The backend does
 not load `.env` files automatically. `.env.example` contains an empty optional
@@ -338,10 +357,6 @@ structured errors. API file-list responses are limited by GitHub to at most
 
 These are future goals and are not implemented yet:
 
-- Accept original project source code and documentation through an input
-  workflow agreed with the frontend team; the backend currently supports the
-  normalized JSON and public GitHub repository endpoints described above.
-- Agree on the frontend's final project-input workflow.
 - Support ZIP upload if selected by the team.
 
 ## PDF documentation
@@ -552,6 +567,54 @@ Example response:
   "status": "ok",
   "service": "docguard-ai-backend"
 }
+```
+
+## Local frontend and backend development
+
+The backend listens on port `3000` by default. In one terminal, from the
+repository root:
+
+```sh
+npm install
+export OLLAMA_MODEL='your-installed-model'
+npm start
+```
+
+Set `OLLAMA_MODEL` to a model already installed in your local Ollama service
+before requesting analysis. The backend does not load `.env` files
+automatically. To use a non-default backend port, set `PORT` and configure the
+frontend API URL to match.
+
+In a second terminal:
+
+```sh
+cd docguard-frontend
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+The Vite development server uses port `5173` by default. The example frontend
+configuration points to `http://localhost:3000/api`; set `VITE_API_URL` in
+`docguard-frontend/.env` if the backend is listening elsewhere. Local backend
+CORS permits only `http://localhost:5173` and `http://127.0.0.1:5173` by
+default. In production, configure an explicit comma-separated
+`CORS_ALLOWED_ORIGINS` allowlist; no production origins are allowed by default.
+
+In the UI, open **Repositories**, submit a public GitHub repository URL, and
+optionally select one or more PDFs. The frontend uploads PDFs first, attaches
+their returned references to repository ingestion, then analyzes the returned
+`projectId`. Results and repository metadata are kept in the current browser
+session. The **Pull request changes** page only fetches PR metadata and changed
+files; full PR-specific documentation analysis is not implemented by the
+backend.
+
+Frontend checks:
+
+```sh
+cd docguard-frontend
+npm run lint
+npm run build
 ```
 
 ## Run tests

@@ -82,6 +82,12 @@ code { font-family: var(--mono); font-size: 13px; }
 .breadcrumb { display: flex; gap: 8px; color: var(--faint); }
 .breadcrumb strong { color: var(--ink); font-weight: 600; }
 .navbar-right { display: flex; align-items: center; gap: 18px; }
+.connection-status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.connection-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.connection-status.connected .connection-dot, .online-dot.connected { background: var(--add); }
+.connection-status.unavailable .connection-dot, .online-dot.unavailable { background: var(--del); }
+.online-dot.checking { background: var(--faint); }
+.storage-warning { padding: 8px 32px; background: var(--med-bg); color: var(--ink); font-size: 12px; }
 
 .search-box {
   display: flex; align-items: center; gap: 8px;
@@ -127,6 +133,7 @@ code { font-family: var(--mono); font-size: 13px; }
 .sev.high     { --c: var(--high); }
 .sev.medium   { --c: #d4a900; }
 .sev.low      { --c: var(--low); }
+.sev.info     { --c: var(--faint); }
 .status.open, .status.warning { --c: var(--high); }
 .status.resolved, .status.clean, .status.connected { --c: var(--add); }
 .status.pending { --c: var(--faint); }
@@ -181,6 +188,12 @@ select { height: 38px; padding: 0 10px; background: var(--surface); border: 1px 
   .page-content { padding: 24px 16px 48px; }
   .page-head { flex-direction: column; align-items: flex-start; }
   h1 { font-size: 24px; }
+}
+
+@media (max-width: 560px) {
+  .connection-status { font-size: 0; }
+  .connection-dot { width: 9px; height: 9px; }
+  .storage-warning { padding: 8px 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
