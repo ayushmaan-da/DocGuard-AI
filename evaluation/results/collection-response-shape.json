@@ -1,0 +1,32 @@
+{
+  "id": "collection-response-shape",
+  "category": "response shape",
+  "description": "Collection response changes from array to an object wrapper.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json({ users });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users.",
+      "reason": "The documentation claims that GET /users returns a JSON array of users, but the updated code wraps the array in an object, changing the response shape.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.json(users);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that GET /users returns a JSON array of users, but the updated code wraps the array in an object, changing the response shape.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

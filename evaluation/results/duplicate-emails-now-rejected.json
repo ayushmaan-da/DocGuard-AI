@@ -1,0 +1,32 @@
+{
+  "id": "duplicate-emails-now-rejected",
+  "category": "validation drift",
+  "description": "POST introduces duplicate-email rejection contrary to the README.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "The API allows multiple users to share an email address.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (users.some(user => user.email === req.body.email)) return res.status(409).json({ error: \"duplicate email\" });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "The API allows multiple users to share an email address.",
+      "reason": "The updated code checks for duplicate emails and returns a 409 error if a duplicate is found, contradicting the documentation that states multiple users can share an email address.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (users.some(user => user.email === req.body.email)) return res.status(409).json({ error: \"duplicate email\" });"
+    }
+  ],
+  "pass": true,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"The API allows multiple users to share an email address.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code checks for duplicate emails and returns a 409 error if a duplicate is found, contradicting the documentation that states multiple users can share an email address.\"\n    }\n  ]\n}",
+  "tp": 1,
+  "fp": 0,
+  "fn": 0,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

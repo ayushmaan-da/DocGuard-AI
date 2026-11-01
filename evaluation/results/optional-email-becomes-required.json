@@ -1,0 +1,32 @@
+{
+  "id": "optional-email-becomes-required",
+  "category": "validation drift",
+  "description": "POST adds a requirement that contradicts an optional-field claim.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "The email field is optional when creating a user.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (!req.body.email) return res.status(400).json({ error: \"email required\" });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "The email field is optional when creating a user.",
+      "reason": "The updated code now requires the email field, contradicting the documentation.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (!req.body.email) return res.status(400).json({ error: \"email required\" });"
+    }
+  ],
+  "pass": true,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"The email field is optional when creating a user.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code now requires the email field, contradicting the documentation.\"\n    }\n  ]\n}",
+  "tp": 1,
+  "fp": 0,
+  "fn": 0,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

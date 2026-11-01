@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "The API allows multiple users to share an email address.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (users.some(user => user.email === req.body.email)) return res.status(409).json({ error: \"duplicate email\" });"
+    }
+  ]
+}

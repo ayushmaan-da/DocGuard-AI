@@ -1,0 +1,7 @@
+diff --git a/original.js b/updated.js
+index aa3fa83..3cafaef 100644
+--- a/original.js
++++ b/updated.js
+@@ -1 +1 @@
+-return res.status(404).json({ error: "User not found" });
++return res.status(404).json({ message: "User not found" });
