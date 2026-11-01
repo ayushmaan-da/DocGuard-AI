@@ -1,10 +1,36 @@
-# Detector evaluation suite
+# Drift-engine evaluation examples
 
-This suite measures the Ollama model's candidate quality on 21 isolated documentation-drift scenarios. Every case has its own `README.md`, original code, updated code, generated Git-style diff, and expected findings under `cases/<case-id>/`. It measures the model layer, not the deterministic removed-response-field rule in `drift-engine.js`; a passing model result is not production verification.
+This suite keeps 21 representative CRUD documentation-drift scenarios as reusable evaluation examples. The scenarios cover response bodies and status codes, resource lookup, PUT and PATCH semantics, validation, duplicates, filtering, authentication, errors, route removal, pagination, unknown routes, pre-existing inaccuracies, undocumented changes, comments, and behavior-preserving edits.
 
-The 21 scenarios cover response bodies and status codes, resource lookup, PUT and PATCH semantics, validation, duplicates, filtering, authentication, errors, route removal, pagination, unknown routes, pre-existing inaccuracies, undocumented changes, comments, and behavior-preserving edits.
+The expected values describe the intended scenario; they are not a deterministic correctness oracle. Semantic decisions are made by the configured model, and a mocked test cannot establish model accuracy.
 
-## Run
+## Run through the integrated backend
+
+Set the same Ollama environment used by DocGuard, then run:
+
+```sh
+export OLLAMA_MODEL='your-installed-model'
+export OLLAMA_BASE_URL='http://127.0.0.1:11434'
+node evaluation/evaluate.js --limit=3
+```
+
+Omit `--limit=3` to run all 21 cases. The evaluator calls
+`analyzeProjectDocumentation` from
+`src/services/project-analysis-service.js`, using the backend's existing
+Ollama transport, settings, limits, and analyser response validator. It does
+not start a sample Express API or create another Ollama client. Output is
+printed as JSON with each expected scenario description and the actual
+validator-compatible analysis response.
+
+Run the mocked adapter and backend tests without a live model using `npm test`.
+Those tests verify the source file paths and content, extracted
+documentation, shared Ollama request schema, and analyzer-response contract.
+
+## Retired standalone runner documentation
+
+The commands and report description below refer to the original standalone
+evaluation runner. They are retained as a record of previously generated
+results and do not describe the integrated `evaluation/evaluate.js` runner.
 
 From the fixture root:
 

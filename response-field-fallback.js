@@ -127,7 +127,7 @@ function removedObjectFields(diff) {
   return removed;
 }
 
-function detectRemovedResponseFields({ originalCode, updatedCode, diff, documentation }) {
+export function detectRemovedResponseFields({ originalCode, updatedCode, diff, documentation }) {
   const removed = removedObjectFields(diff);
   const sentences = documentationSentences(documentation);
   const findings = [];
@@ -173,5 +173,3 @@ function detectRemovedResponseFields({ originalCode, updatedCode, diff, document
   }
   return findings;
 }
-
-module.exports = { detectRemovedResponseFields };

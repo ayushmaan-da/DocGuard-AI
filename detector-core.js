@@ -1,4 +1,4 @@
-function addedOrRemovedLines(diff) {
+export function addedOrRemovedLines(diff) {
   return diff.split(/\r?\n/).flatMap(line => {
     if (line.startsWith("+++") || line.startsWith("---")) return [];
     if (line.startsWith("+")) return [{ type: "added", text: line.slice(1) }];
@@ -7,34 +7,12 @@ function addedOrRemovedLines(diff) {
   });
 }
 
-function cleanResponse(text) {
+export function cleanResponse(text) {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   return JSON.parse(cleaned);
 }
 
-const modelResponseSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    findings: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          outdated: { type: "boolean", const: true },
-          sentence: { type: "string" },
-          evidenceId: { type: "string", pattern: "^E[1-9][0-9]*$" },
-          reason: { type: "string" }
-        },
-        required: ["outdated", "sentence", "evidenceId", "reason"]
-      }
-    }
-  },
-  required: ["findings"]
-};
-
-function resolveEvidenceReferences(result, changedLines) {
+export function resolveEvidenceReferences(result, changedLines) {
   if (!result || !Array.isArray(result.findings)) return result;
   const evidenceById = new Map(orderEvidenceCandidates(changedLines).map((line, index) => [`E${index + 1}`, line]));
   return {
@@ -58,7 +36,7 @@ function orderEvidenceCandidates(changedLines) {
   return [...changedLines.filter(line => line.type === "added"), ...changedLines.filter(line => line.type === "removed")];
 }
 
-function validateFindings(result, documentation, changedLines) {
+export function validateFindings(result, documentation, changedLines) {
   if (!result || !Array.isArray(result.findings)) throw new Error("Model response must contain a findings array");
   const seenSentences = new Set();
   const valid = [];
@@ -90,7 +68,7 @@ function validateFindings(result, documentation, changedLines) {
   return valid;
 }
 
-function validModelSuggestions(result, documentation, changedLines) {
+export function validModelSuggestions(result, documentation, changedLines) {
   if (!result || !Array.isArray(result.findings)) return [];
   const accepted = [];
   const seen = new Set();
@@ -110,7 +88,7 @@ function validModelSuggestions(result, documentation, changedLines) {
   return accepted;
 }
 
-function buildPrompt(originalCode, updatedCode, diff, documentation) {
+export function buildPrompt(originalCode, updatedCode, diff, documentation) {
   const evidenceLines = orderEvidenceCandidates(addedOrRemovedLines(diff)).map((line, index) =>
     `E${index + 1} ${line.type.toUpperCase()} ${JSON.stringify(line.text)}`
   ).join("\n");
@@ -140,24 +118,3 @@ Example shape: {"findings":[{"outdated":true,"sentence":"Exact sentence from the
 
 ORIGINAL CODE:\n${originalCode}\n\nUPDATED CODE:\n${updatedCode}\n\nCHANGED-LINE EVIDENCE (IDs preserve exact diff side and text):\n${evidenceLines || "(no changed lines)"}\n\nDOCUMENTATION:\n${documentation}`;
 }
-
-async function queryOllama(prompt, { url, model, numCtx = 8192, timeoutMs = 120000 } = {}) {
-  const response = await fetch(url || process.env.OLLAMA_URL || "http://localhost:11434/api/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(timeoutMs),
-    body: JSON.stringify({
-      model: model || process.env.OLLAMA_MODEL || "qwen2.5-coder:7b",
-      stream: false,
-      format: modelResponseSchema,
-      options: { temperature: 0, num_ctx: numCtx },
-      prompt
-    })
-  });
-  if (!response.ok) throw new Error(`Ollama request failed: ${response.status} ${response.statusText}`);
-  const payload = await response.json();
-  if (typeof payload.response !== "string") throw new Error("Ollama response has no text field");
-  return payload.response;
-}
-
-module.exports = { addedOrRemovedLines, cleanResponse, modelResponseSchema, resolveEvidenceReferences, validateFindings, validModelSuggestions, buildPrompt, queryOllama };

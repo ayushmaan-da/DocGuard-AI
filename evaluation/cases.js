@@ -1,6 +1,6 @@
 const finding = (sentence, evidenceType, codeEvidence) => ({ outdated: true, sentence, evidenceType, codeEvidence });
 
-module.exports = [
+export default [
   {
     id: "post-status-code",
     category: "status-code drift",

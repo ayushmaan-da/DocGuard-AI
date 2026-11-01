@@ -1,6 +1,6 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
-const { analyze } = require("./drift-engine");
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { analyze } from './drift-engine.js';
 
 const originalCode = `app.get("/users", (req, res) => {
   res.json({
