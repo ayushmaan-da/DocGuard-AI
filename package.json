@@ -4,9 +4,9 @@
   "description": "**Automated Documentation Drift Detection**",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "node --test"
+    "start": "OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:7b} node src/server.js",
+    "dev": "OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:7b} node --watch src/server.js",
+    "test": "node --test test/*.test.js"
   },
   "repository": {
     "type": "git",
