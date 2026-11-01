@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users?name= filters the collection to users with that name.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json(users);"
+    }
+  ]
+}

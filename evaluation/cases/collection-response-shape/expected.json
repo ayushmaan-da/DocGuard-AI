@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json({ users });"
+    }
+  ]
+}

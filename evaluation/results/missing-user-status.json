@@ -1,0 +1,32 @@
+{
+  "id": "missing-user-status",
+  "category": "not-found behavior",
+  "description": "A missing user changes from 404 to 200.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns status 404 when the user does not exist.",
+      "evidenceType": "added",
+      "codeEvidence": "if (!user) return res.status(200).json(null);"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns status 404 when the user does not exist.",
+      "reason": "The updated code returns a 200 status instead of a 404 status when the user does not exist.",
+      "evidenceType": "removed",
+      "codeEvidence": "if (!user) return res.status(404).json({ error: \"User not found\" });"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns status 404 when the user does not exist.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code returns a 200 status instead of a 404 status when the user does not exist.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

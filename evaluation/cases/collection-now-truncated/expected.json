@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns every user in the collection.",
+      "evidenceType": "added",
+      "codeEvidence": "res.json(users.slice(0, 10));"
+    }
+  ]
+}

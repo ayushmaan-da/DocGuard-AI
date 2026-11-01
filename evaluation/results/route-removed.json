@@ -1,0 +1,32 @@
+{
+  "id": "route-removed",
+  "category": "route removal",
+  "description": "The documented resource route is removed.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns one user by ID.",
+      "evidenceType": "removed",
+      "codeEvidence": "app.get(\"/users/:id\", (req, res) => {"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns one user by ID.",
+      "reason": "The updated code now returns all users instead of a single user by ID.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.json(users.find(user => user.id === req.params.id));"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns one user by ID.\",\n      \"evidenceId\": \"E4\",\n      \"reason\": \"The updated code now returns all users instead of a single user by ID.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

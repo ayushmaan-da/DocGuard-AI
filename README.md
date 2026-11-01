@@ -34,17 +34,13 @@ Frontend ← Backend API ← Analysis Response
 ```
 
 The backend acts as the bridge between the separately developed frontend and
-the AI analyser. Its intended responsibilities are to receive original
-source-code files and documentation, validate and organize the submitted
-project, preserve original contents and relative paths, distinguish source
-code from documentation, send the original material to the analyser, and
-forward the analyser's response to the frontend.
-
-The separate AI analyser is responsible for examining the source code and
-documentation, detecting changes, and identifying documentation
-inconsistencies. The backend must preserve original files without rewriting,
-formatting, or summarizing them. Project processing should remain independent
-of the input method eventually selected by the frontend team.
+the existing Ollama analyser. It receives original source files and
+documentation, validates and organizes the project, preserves contents and
+relative paths, and forwards a validated analysis response to the frontend.
+The reusable drift engine adds task-specific instructions and adapts prepared
+project input; the existing analyser service still owns model configuration,
+transport, and response validation. Project processing remains independent of
+the input method selected by the frontend team.
 
 Currently, the backend provides:
 
@@ -66,15 +62,16 @@ Currently, the backend provides:
   PDFs found in GitHub repositories. Original PDFs remain available through
   short-lived in-memory references; extracted text and page numbers are kept
   separately from source code.
-- Temporary project references and an Ollama API adapter that sends validated
-  source and documentation records, validates the analyser response, and
-  returns it to the frontend.
+- Temporary project references, a reusable documentation-drift engine, and
+  the existing Ollama API adapter. The adapter sends validated source and
+  documentation records, validates the analyser response, and returns it to
+  the frontend.
 
 GitHub ingestion is one supported backend input route, but the final frontend
 input workflow is not yet agreed. The backend does not yet support ZIP upload
-or persistent project storage. The backend does not implement its own
-semantic code analysis, documentation drift detection, or AI reasoning; those
-responsibilities are delegated to the configured Ollama model.
+or persistent project storage. The backend does not guarantee model findings.
+The drift engine supplies task instructions while semantic reasoning is
+performed by the configured Ollama model.
 
 ### Normalized project input
 
@@ -212,8 +209,9 @@ contents are never written to disk. Project references are held temporarily
 in memory; only an explicit analysis request sends prepared text to the
 configured Ollama service.
 The structured `analyserInput` is the input to the Stage 5 Ollama adapter.
-The backend validates and transports its response; semantic analysis and
-drift detection are performed by the configured model, not backend code.
+The reusable drift engine supplies task-specific analysis instructions; the
+existing analyser service owns Ollama transport and validates the response
+against the backend's response contract.
 
 The recursive Git Trees REST endpoint is not paginated. If GitHub marks its
 tree response as truncated, ingestion fails explicitly with
@@ -469,6 +467,44 @@ array. Every finding must contain severity (`critical`, `high`, `medium`,
 references, and recommendation. Reference records require a path and may
 include line ranges or a page number and quote. Empty findings are valid; the
 backend does not create, revise, or infer findings.
+
+### Reusing the drift engine from the backend
+
+The analysis endpoint already calls `analyzeProjectDocumentation` from
+`src/services/project-analysis-service.js`. That adapter accepts the prepared
+project reference directly, retains each original source path/content and
+extracted documentation record, adds the drift instructions, then delegates to
+the existing `analyzeWithOllama` service. It does not add a second Ollama
+configuration or response schema.
+
+Other backend code can call the same service with the prepared project shape:
+
+```js
+import { analyzeProjectDocumentation } from './src/services/project-analysis-service.js';
+
+const { model, analysis } = await analyzeProjectDocumentation({
+  project: {
+    name: 'example-project',
+    source: { type: 'normalized' },
+    sourceFiles: [
+      { path: 'src/config.js', content: 'export const timeout = 30;\n' },
+    ],
+    documentation: [
+      { path: 'docs/guide.md', extractedText: 'The timeout is 20 seconds.' },
+    ],
+    warnings: [],
+  },
+});
+
+// `analysis` follows the existing analyser-validator response: { summary, findings }.
+```
+
+For a caller that has not built a full prepared project object, the lower-level
+`analyzeDocumentationDrift` export also accepts
+`{ sourceFiles: [{ path, content }], documentationText }`. Its analyzer
+function is injected, so the backend retains control of configuration and
+transport. Run `npm test` for the backend and adapter integration tests. The
+21-case model evaluation is described in `evaluation/README.md`.
 
 Configure Ollama by copying `.env.example` and setting `OLLAMA_MODEL` to a
 model already available to your Ollama service. The application does not

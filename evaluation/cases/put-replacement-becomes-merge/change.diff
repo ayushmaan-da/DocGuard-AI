@@ -1,0 +1,7 @@
+diff --git a/original.js b/updated.js
+index dac3eb4..28e14e3 100644
+--- a/original.js
++++ b/updated.js
+@@ -1 +1 @@
+-users[index] = { id: req.params.id, name: req.body.name, email: req.body.email };
++users[index] = { ...users[index], ...req.body };

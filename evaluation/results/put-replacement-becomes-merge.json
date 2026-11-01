@@ -1,0 +1,32 @@
+{
+  "id": "put-replacement-becomes-merge",
+  "category": "PUT semantics",
+  "description": "PUT begins preserving fields omitted from the request.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "PUT /users/:id replaces the resource and removes fields omitted from the request.",
+      "evidenceType": "added",
+      "codeEvidence": "users[index] = { ...users[index], ...req.body };"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "PUT /users/:id replaces the resource and removes fields omitted from the request.",
+      "reason": "The updated code uses object spread to merge the existing user with the request body, which may not remove omitted fields as the documentation suggests.",
+      "evidenceType": "removed",
+      "codeEvidence": "users[index] = { id: req.params.id, name: req.body.name, email: req.body.email };"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"PUT /users/:id replaces the resource and removes fields omitted from the request.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code uses object spread to merge the existing user with the request body, which may not remove omitted fields as the documentation suggests.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

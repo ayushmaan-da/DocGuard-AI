@@ -1,0 +1,32 @@
+{
+  "id": "patch-drops-omitted-fields",
+  "category": "PATCH semantics",
+  "description": "PATCH starts discarding fields the request omits.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "PATCH /users/:id changes only supplied fields and preserves omitted fields.",
+      "evidenceType": "added",
+      "codeEvidence": "users[index] = { id: req.params.id, ...req.body };"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "PATCH /users/:id changes only supplied fields and preserves omitted fields.",
+      "reason": "The updated code replaces the entire user object with a new object that includes the user's ID, which contradicts the documentation stating that only supplied fields should be changed and omitted fields preserved.",
+      "evidenceType": "added",
+      "codeEvidence": "users[index] = { id: req.params.id, ...req.body };"
+    }
+  ],
+  "pass": true,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"PATCH /users/:id changes only supplied fields and preserves omitted fields.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code replaces the entire user object with a new object that includes the user's ID, which contradicts the documentation stating that only supplied fields should be changed and omitted fields preserved.\"\n    }\n  ]\n}",
+  "tp": 1,
+  "fp": 0,
+  "fn": 0,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

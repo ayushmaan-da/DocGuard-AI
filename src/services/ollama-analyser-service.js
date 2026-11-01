@@ -126,7 +126,11 @@ function validateOllamaEnvelope(envelope) {
 export async function analyzeWithOllama(project, {
   fetchImpl = globalThis.fetch,
   configuration = getOllamaConfiguration(),
+  additionalInstructions = '',
 } = {}) {
+  if (typeof additionalInstructions !== 'string') {
+    throw new HttpError(500, 'ANALYSER_CONFIGURATION_ERROR', 'additionalInstructions must be a string.');
+  }
   if (!configuration.model) {
     throw new HttpError(503, 'ANALYSER_NOT_CONFIGURED', 'Set OLLAMA_MODEL to the installed Ollama model name before requesting analysis.');
   }
@@ -164,7 +168,10 @@ export async function analyzeWithOllama(project, {
     stream: false,
     format: getAnalyserOutputSchema(),
     messages: [
-      { role: 'system', content: ANALYSER_SYSTEM_PROMPT },
+      {
+        role: 'system',
+        content: [ANALYSER_SYSTEM_PROMPT, additionalInstructions].filter(Boolean).join('\n\n'),
+      },
       { role: 'user', content: inputJson },
     ],
   });
