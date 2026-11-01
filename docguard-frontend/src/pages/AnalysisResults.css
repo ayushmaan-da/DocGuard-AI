@@ -18,6 +18,13 @@
 
 .issue-detail { display: grid; gap: 16px; position: sticky; top: 24px; }
 .issue-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.analysis-project-select { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; color: var(--muted); }
+.analysis-summary { margin-top: 20px; font-size: 15px; }
+.analysis-warnings { margin-top: 12px; padding-left: 20px; color: var(--muted); }
+.issue-detail section h3 { margin-bottom: 6px; }
+.issue-detail section ul { display: grid; gap: 8px; list-style: none; }
+.issue-detail blockquote { margin: 6px 0 0 12px; padding-left: 10px; border-left: 2px solid var(--line-strong); color: var(--muted); overflow-wrap: anywhere; }
+.issue-detail p { overflow-wrap: anywhere; }
 
 @media (max-width: 850px) {
   .results-content { grid-template-columns: 1fr; }

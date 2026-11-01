@@ -2,12 +2,14 @@ import { getHealth } from '../controllers/health-controller.js';
 import { analyzeProject } from '../controllers/analysis-controller.js';
 import { createGitHubProject } from '../controllers/github-project-controller.js';
 import { createGitHubPullRequestContext } from '../controllers/github-pull-request-controller.js';
+import { createGitHubPullRequestAnalysis } from '../controllers/github-pull-request-analysis-controller.js';
 import { downloadOriginalPdf, uploadPdfDocumentation } from '../controllers/pdf-document-controller.js';
 import { createProject } from '../controllers/project-controller.js';
 
 export async function routeApiRequest(request, response, {
   ingestRepository,
   ingestPullRequest,
+  runPullRequestAnalysis,
   saveProject,
   loadProject,
   runAnalysis,
@@ -28,6 +30,11 @@ export async function routeApiRequest(request, response, {
 
   if (request.method === 'POST' && pathname === '/api/pull-requests/from-github') {
     await createGitHubPullRequestContext(request, response, ingestPullRequest);
+    return true;
+  }
+
+  if (request.method === 'POST' && pathname === '/api/pull-requests/analyze') {
+    await createGitHubPullRequestAnalysis(request, response, runPullRequestAnalysis);
     return true;
   }
 

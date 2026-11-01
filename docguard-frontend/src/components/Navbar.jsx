@@ -1,5 +1,9 @@
+import { useEffect } from "react";
 import { Search, Bell } from "lucide-react";
 import { useLocation } from "react-router-dom";
+
+import { useWorkflow } from "../workflow-context";
+import { getApiErrorMessage, getHealth } from "../services/api";
 
 const pageNames = {
   "/": "Dashboard",
@@ -12,6 +16,39 @@ const pageNames = {
 
 const Navbar = () => {
   const { pathname } = useLocation();
+  const { backendStatus, setBackendStatus } = useWorkflow();
+
+  useEffect(() => {
+    let active = true;
+    let nextCheck;
+
+    const checkHealth = async () => {
+      if (active) setBackendStatus({ state: "checking", message: "" });
+      try {
+        const health = await getHealth();
+        if (active) {
+          setBackendStatus({
+            state: health?.status === "ok" ? "connected" : "unavailable",
+            message: health?.status === "ok"
+              ? `${health.service ?? "Backend"} is responding.`
+              : "The backend health endpoint returned an unexpected status."
+          });
+        }
+      } catch (error) {
+        if (active) {
+          setBackendStatus({ state: "unavailable", message: getApiErrorMessage(error) });
+        }
+      } finally {
+        if (active) nextCheck = window.setTimeout(checkHealth, 30_000);
+      }
+    };
+
+    void checkHealth();
+    return () => {
+      active = false;
+      window.clearTimeout(nextCheck);
+    };
+  }, [setBackendStatus]);
 
   return (
     <header className="navbar">
@@ -22,6 +59,14 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-right">
+        <span className={`connection-status ${backendStatus.state}`} role="status" title={backendStatus.message}>
+          <span className="connection-dot" />
+          {backendStatus.state === "connected"
+            ? "Backend connected"
+            : backendStatus.state === "unavailable"
+              ? "Backend unavailable"
+              : "Checking backend"}
+        </span>
         <label className="search-box">
           <Search size={16} />
           <input placeholder="Search" aria-label="Search" />

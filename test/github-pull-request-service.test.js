@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { ingestGitHubPullRequest } from '../src/services/github-pull-request-service.js';
 import { HttpError } from '../src/utils/http-error.js';
@@ -47,6 +48,21 @@ function createChangedFile(filename, overrides = {}) {
     patch: '@@ -1 +1 @@\n-old\n+new\n',
     ...overrides,
   };
+}
+
+function createContentResponse(path, content) {
+  const bytes = Buffer.from(content, 'utf8');
+  const sha = createHash('sha1')
+    .update(`blob ${bytes.length}\0`)
+    .update(bytes)
+    .digest('hex');
+  return jsonResponse({
+    path,
+    size: bytes.length,
+    sha,
+    encoding: 'base64',
+    content: bytes.toString('base64'),
+  });
 }
 
 function createGitHubMock({
@@ -489,4 +505,95 @@ test('returns an empty change context for a Pull Request with no changed files',
   );
   assert.equal(result.changeContext.summary.totalFiles, 0);
   assert.equal(calls.length, 1);
+});
+
+test('retrieves and verifies exact source contents at both Pull Request revisions when requested', async () => {
+  const originalCode = 'app.get("/users", (req, res) => res.json({ count: 1 }));\n';
+  const updatedCode = 'app.get("/users", (req, res) => res.json({ users: [] }));\n';
+  const { calls, fetchImpl } = createGitHubMock({
+    metadata: createMetadata({ changed_files: 1 }),
+    files: [createChangedFile('src/users.js', {
+      patch: '@@ -1 +1 @@\n-app.get("/users", (req, res) => res.json({ count: 1 }));\n+app.get("/users", (req, res) => res.json({ users: [] }));\n',
+    })],
+    overrides: {
+      '/repos/example/project/contents/src/users.js': async (url) => (
+        new URL(url).searchParams.get('ref') === BASE_SHA
+          ? createContentResponse('src/users.js', originalCode)
+          : createContentResponse('src/users.js', updatedCode)
+      ),
+    },
+  });
+  const result = await ingestGitHubPullRequest(
+    { pullRequestUrl: PULL_REQUEST_URL },
+    { fetchImpl, limits: TEST_LIMITS, includeSourceContents: true },
+  );
+
+  assert.deepEqual(result.sourceSnapshots, [{
+    path: 'src/users.js',
+    diff: result.changeContext.sourceChanges[0].patch,
+    originalCode,
+    updatedCode,
+  }]);
+  assert.equal(calls.length, 4);
+  assert.equal(calls[2].options.redirect, 'error');
+  assert.match(calls[2].url, new RegExp(`ref=${BASE_SHA}`));
+  assert.match(calls[3].url, new RegExp(`ref=${HEAD_SHA}`));
+});
+
+test('retrieves head source from the validated public fork repository', async () => {
+  const metadata = createMetadata({
+    changed_files: 1,
+    head: {
+      ...createMetadata().head,
+      repo: { full_name: 'contributor/fork', private: false },
+    },
+  });
+  const baseCode = 'const before = true;\n';
+  const headCode = 'const after = true;\n';
+  const { calls, fetchImpl } = createGitHubMock({
+    metadata,
+    files: [createChangedFile('src/config.js')],
+    overrides: {
+      '/repos/example/project/contents/src/config.js': async () => (
+        createContentResponse('src/config.js', baseCode)
+      ),
+      '/repos/contributor/fork/contents/src/config.js': async () => (
+        createContentResponse('src/config.js', headCode)
+      ),
+    },
+  });
+
+  const result = await ingestGitHubPullRequest(
+    { pullRequestUrl: PULL_REQUEST_URL },
+    { fetchImpl, limits: TEST_LIMITS, includeSourceContents: true },
+  );
+
+  assert.equal(result.pullRequest.head.repositoryUrl, 'https://github.com/contributor/fork');
+  assert.equal(result.sourceSnapshots[0].originalCode, baseCode);
+  assert.equal(result.sourceSnapshots[0].updatedCode, headCode);
+  assert.ok(calls.some(({ url }) => url.startsWith('https://api.github.com/repos/contributor/fork/contents/')));
+});
+
+test('rejects source files above the configured analysis limit', async () => {
+  const { fetchImpl } = createGitHubMock({
+    metadata: createMetadata({ changed_files: 1 }),
+    files: [createChangedFile('src/large.js')],
+    overrides: {
+      '/repos/example/project/contents/src/large.js': async () => (
+        createContentResponse('src/large.js', 'larger than limit')
+      ),
+    },
+  });
+
+  await assert.rejects(
+    ingestGitHubPullRequest(
+      { pullRequestUrl: PULL_REQUEST_URL },
+      {
+        fetchImpl,
+        limits: { ...TEST_LIMITS, maxSourceFileBytes: 4 },
+        includeSourceContents: true,
+      },
+    ),
+    (error) => error.statusCode === 413 && error.code === 'PULL_REQUEST_SOURCE_FILE_TOO_LARGE',
+  );
 });

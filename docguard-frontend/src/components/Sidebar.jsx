@@ -7,6 +7,7 @@ import {
   Settings,
   ShieldCheck
 } from "lucide-react";
+import { useWorkflow } from "../workflow-context";
 
 const navItems = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -16,8 +17,10 @@ const navItems = [
   { name: "Settings", path: "/settings", icon: Settings }
 ];
 
-const Sidebar = () => (
-  <aside className="sidebar">
+const Sidebar = () => {
+  const { backendStatus } = useWorkflow();
+  return (
+    <aside className="sidebar">
     <div className="brand">
       <div className="brand-icon">
         <ShieldCheck size={17} color="#12161c" />
@@ -41,10 +44,11 @@ const Sidebar = () => (
     </nav>
 
     <div className="sidebar-bottom">
-      <span className="online-dot" />
-      <span>Checks running normally</span>
+      <span className={`online-dot ${backendStatus.state}`} />
+      <span>{backendStatus.state === "connected" ? "Backend available" : backendStatus.state === "unavailable" ? "Backend unavailable" : "Checking backend"}</span>
     </div>
-  </aside>
-);
+    </aside>
+  );
+};
 
 export default Sidebar;

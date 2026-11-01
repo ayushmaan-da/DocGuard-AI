@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
 
+import { useWorkflow } from "../workflow-context";
+
 import "./Settings.css";
 
 const STORAGE_KEY = "docguard-settings";
@@ -19,6 +21,7 @@ const loadPreferences = () => {
 };
 
 const Settings = () => {
+  const { backendStatus } = useWorkflow();
   const [prefs, setPrefs] = useState(loadPreferences);
   const [saved, setSaved] = useState(false);
 
@@ -44,15 +47,23 @@ const Settings = () => {
       </header>
 
       <section className="settings-section">
-        <h2>GitHub</h2>
+        <h2>Backend connection</h2>
         <div className="settings-row">
           <div>
-            <strong>GitHub account</strong>
-            <p>Connect your account so DocGuard can read pull requests.</p>
+            <strong>API status</strong>
+            <p>{backendStatus.message || "Checking the backend health endpoint."}</p>
           </div>
-          <span className="status pending">Not connected</span>
+          <span className={`status ${backendStatus.state === "connected" ? "connected" : "pending"}`}>
+            {backendStatus.state === "connected"
+              ? "Connected"
+              : backendStatus.state === "unavailable"
+                ? "Unavailable"
+                : "Checking"}
+          </span>
         </div>
-        <p className="settings-note">Connecting will be available once the backend is live.</p>
+        <p className="settings-note">
+          The backend accepts public GitHub repositories. Any GitHub token must remain configured on the backend, never in this frontend.
+        </p>
       </section>
 
       <section className="settings-section">

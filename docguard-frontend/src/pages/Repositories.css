@@ -4,3 +4,12 @@
 .icon-link { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 4px; color: var(--muted); }
 .icon-link:hover { background: var(--surface); color: var(--ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.repository-form { max-width: 640px; margin-bottom: 28px; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.repository-form h2 { margin-bottom: 18px; }
+.text-input { width: 100%; min-height: 42px; padding: 9px 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); }
+.text-input:focus { outline: 2px solid var(--mark); outline-offset: 1px; }
+.file-input { padding: 7px; }
+.repository-form .form-error { margin: 0 0 16px; }
+.table td .link-button { margin-left: 8px; }
+.link-button:disabled { opacity: .55; cursor: not-allowed; }
+.repository-note { margin-top: 18px; color: var(--muted); font-size: 12px; }

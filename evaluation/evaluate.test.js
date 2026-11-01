@@ -1,6 +1,6 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
-const { scoreCase } = require("./evaluate");
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { scoreCase } from './evaluate.js';
 
 const expected = [{
   outdated: true,

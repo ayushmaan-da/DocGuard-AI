@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { WorkflowProvider } from "./WorkflowContext";
 
 import MainLayout from "./layouts/MainLayout";
 
@@ -11,7 +12,8 @@ import Settings from "./pages/Settings";
 
 function App() {
   return (
-    <BrowserRouter>
+    <WorkflowProvider>
+      <BrowserRouter>
 
       <Routes>
 
@@ -48,7 +50,8 @@ function App() {
 
       </Routes>
 
-    </BrowserRouter>
+      </BrowserRouter>
+    </WorkflowProvider>
   );
 }
 

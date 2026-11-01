@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const { detectRemovedResponseFields } = require("./response-field-fallback");
+const { detectRemovedResponseFields } = require("./response-field-fallback.cjs");
 
 const original = `app.get("/users", (req, res) => {
   res.json({
