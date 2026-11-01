@@ -539,6 +539,24 @@ available port:
 PORT=4000 npm start
 ```
 
+The start scripts use the locally installed `qwen2.5-coder:7b` model by
+default. Override it with `OLLAMA_MODEL` when you want to use another Ollama
+model.
+
+## Start the frontend
+
+In a second terminal, start the Vite development server. API requests to
+`/api` are forwarded to the backend on `http://127.0.0.1:3000` by default.
+
+```sh
+cd docguard-frontend
+npm install
+npm run dev
+```
+
+Set `API_PROXY_TARGET` when the backend listens on a different address. For
+example, `API_PROXY_TARGET=http://127.0.0.1:4000 npm run dev`.
+
 ## Health check
 
 ```http
