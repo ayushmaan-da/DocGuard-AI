@@ -1,0 +1,32 @@
+{
+  "id": "collection-now-truncated",
+  "category": "collection completeness",
+  "description": "GET /users silently truncates its documented full collection.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns every user in the collection.",
+      "evidenceType": "added",
+      "codeEvidence": "res.json(users.slice(0, 10));"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns every user in the collection.",
+      "reason": "The updated code now returns only the first 10 users, contradicting the documentation that claims it returns every user.",
+      "evidenceType": "removed",
+      "codeEvidence": "res.json(users);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns every user in the collection.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code now returns only the first 10 users, contradicting the documentation that claims it returns every user.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

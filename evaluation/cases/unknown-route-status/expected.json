@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "Unknown routes return status 404.",
+      "evidenceType": "added",
+      "codeEvidence": "app.use((req, res) => res.status(200).json({ error: \"Route not found\" }));"
+    }
+  ]
+}

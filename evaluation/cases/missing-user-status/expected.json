@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns status 404 when the user does not exist.",
+      "evidenceType": "added",
+      "codeEvidence": "if (!user) return res.status(200).json(null);"
+    }
+  ]
+}

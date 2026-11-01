@@ -1,0 +1,32 @@
+{
+  "id": "authentication-added",
+  "category": "authentication",
+  "description": "A formerly public route starts requiring authentication.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "User routes are public and do not require authentication.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (!req.user) return res.status(401).json({ error: \"Unauthorized\" });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "User routes are public and do not require authentication.",
+      "reason": "The new implementation checks for authentication, which contradicts the claim that user routes do not require authentication.",
+      "evidenceType": "added",
+      "codeEvidence": "  if (!req.user) return res.status(401).json({ error: \"Unauthorized\" });"
+    }
+  ],
+  "pass": true,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"User routes are public and do not require authentication.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The new implementation checks for authentication, which contradicts the claim that user routes do not require authentication.\"\n    }\n  ]\n}",
+  "tp": 1,
+  "fp": 0,
+  "fn": 0,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

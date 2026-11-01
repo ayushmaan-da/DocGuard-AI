@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns one user by ID.",
+      "evidenceType": "removed",
+      "codeEvidence": "app.get(\"/users/:id\", (req, res) => {"
+    }
+  ]
+}

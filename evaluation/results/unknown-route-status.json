@@ -1,0 +1,32 @@
+{
+  "id": "unknown-route-status",
+  "category": "unknown route behavior",
+  "description": "Unknown routes stop returning 404.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "Unknown routes return status 404.",
+      "evidenceType": "added",
+      "codeEvidence": "app.use((req, res) => res.status(200).json({ error: \"Route not found\" }));"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "Unknown routes return status 404.",
+      "reason": "The updated code now returns a 200 status instead of a 404 status for unknown routes, which contradicts the documentation.",
+      "evidenceType": "removed",
+      "codeEvidence": "app.use((req, res) => res.status(404).json({ error: \"Route not found\" }));"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"Unknown routes return status 404.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The updated code now returns a 200 status instead of a 404 status for unknown routes, which contradicts the documentation.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

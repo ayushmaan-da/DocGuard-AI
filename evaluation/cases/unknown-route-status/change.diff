@@ -1,0 +1,7 @@
+diff --git a/original.js b/updated.js
+index 92e635b..de8c013 100644
+--- a/original.js
++++ b/updated.js
+@@ -1 +1 @@
+-app.use((req, res) => res.status(404).json({ error: "Route not found" }));
++app.use((req, res) => res.status(200).json({ error: "Route not found" }));

@@ -1,0 +1,25 @@
+{
+  "id": "preexisting-documentation-mismatch",
+  "category": "pre-existing inaccuracy",
+  "description": "The README was already wrong and the code change does not worsen it.",
+  "expected": [],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users returns a JSON array of users.",
+      "reason": "The updated code adds a console log statement, which does not affect the observable behavior of the API. The documentation only promises a JSON response, and the addition of a console log does not contradict this claim.",
+      "evidenceType": "added",
+      "codeEvidence": "  console.log(\"collection requested\");"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users returns a JSON array of users.\",\n      \"evidenceId\": \"E1\",\n      \"reason\": \"The updated code adds a console log statement, which does not affect the observable behavior of the API. The documentation only promises a JSON response, and the addition of a console log does not contradict this claim.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 0,
+  "claimTp": 0,
+  "claimFp": 1,
+  "claimFn": 0
+}

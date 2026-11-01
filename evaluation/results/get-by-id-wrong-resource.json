@@ -1,0 +1,32 @@
+{
+  "id": "get-by-id-wrong-resource",
+  "category": "resource selection",
+  "description": "GET by ID stops returning the matching resource.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns the user whose ID matches the route parameter.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.json(users[0]);"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "GET /users/:id returns the user whose ID matches the route parameter.",
+      "reason": "The documentation claims that the endpoint returns the user whose ID matches the route parameter, but the updated code always returns the first user in the array, regardless of the route parameter.",
+      "evidenceType": "removed",
+      "codeEvidence": "  res.json(user);"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"GET /users/:id returns the user whose ID matches the route parameter.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that the endpoint returns the user whose ID matches the route parameter, but the updated code always returns the first user in the array, regardless of the route parameter.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}

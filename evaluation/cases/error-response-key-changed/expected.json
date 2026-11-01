@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "Error responses contain a JSON `error` property.",
+      "evidenceType": "added",
+      "codeEvidence": "return res.status(404).json({ message: \"User not found\" });"
+    }
+  ]
+}

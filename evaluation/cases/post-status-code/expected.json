@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "POST /users responds with HTTP status 201.",
+      "evidenceType": "added",
+      "codeEvidence": "  res.status(200).json(req.body);"
+    }
+  ]
+}

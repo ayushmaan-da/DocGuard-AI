@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "outdated": true,
+      "sentence": "PATCH /users/:id changes only supplied fields and preserves omitted fields.",
+      "evidenceType": "added",
+      "codeEvidence": "users[index] = { id: req.params.id, ...req.body };"
+    }
+  ]
+}

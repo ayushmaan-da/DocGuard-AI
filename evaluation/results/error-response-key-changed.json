@@ -1,0 +1,32 @@
+{
+  "id": "error-response-key-changed",
+  "category": "error response shape",
+  "description": "Error payload changes its documented property name.",
+  "expected": [
+    {
+      "outdated": true,
+      "sentence": "Error responses contain a JSON `error` property.",
+      "evidenceType": "added",
+      "codeEvidence": "return res.status(404).json({ message: \"User not found\" });"
+    }
+  ],
+  "actual": [
+    {
+      "outdated": true,
+      "sentence": "Error responses contain a JSON `error` property.",
+      "reason": "The documentation claims that error responses must contain a JSON `error` property. However, the updated code now returns a JSON `message` property instead, which contradicts this claim.",
+      "evidenceType": "removed",
+      "codeEvidence": "return res.status(404).json({ error: \"User not found\" });"
+    }
+  ],
+  "pass": false,
+  "validationError": null,
+  "error": null,
+  "rawResponse": "{\n  \"findings\": [\n    {\n      \"outdated\": true,\n      \"sentence\": \"Error responses contain a JSON `error` property.\",\n      \"evidenceId\": \"E2\",\n      \"reason\": \"The documentation claims that error responses must contain a JSON `error` property. However, the updated code now returns a JSON `message` property instead, which contradicts this claim.\"\n    }\n  ]\n}",
+  "tp": 0,
+  "fp": 1,
+  "fn": 1,
+  "claimTp": 1,
+  "claimFp": 0,
+  "claimFn": 0
+}
